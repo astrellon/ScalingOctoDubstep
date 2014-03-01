@@ -1,0 +1,63 @@
+﻿using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+
+public class SessionRenderer : MonoBehaviour {
+
+	public List<string> History {get; private set;}
+	public Session Session {get; set;}
+
+	public SessionRenderer() {
+		History = new List<string>();
+	}
+	// Use this for initialization
+	void Start () {
+
+	}
+
+	void OnGUI() {
+		if (Session != null) {
+			//string text = new string(Session.Buffer) + Session.InputBuffer;
+			string text = "";
+			int max = Mathf.Min(Session.Buffer.Count, Session.Height);
+			for (int i = 0; i < max; i++) {
+				if (i > 0) {
+					text += "\n";
+				}
+				text += new string(Session.Buffer[i]);
+			}
+			text += Session.InputBuffer;
+			GUI.Label(new Rect(0, 0, Screen.width, Screen.height), text);
+		}
+	}
+
+	void AddToBuffer(string input) {
+		for (int i = 0; i < input.Length; i++) {
+			char data = input[i];
+			if (data == '\b') {
+				if (Session.InputBuffer.Length > 0) {
+					Session.InputBuffer = Session.InputBuffer.Remove(Session.InputBuffer.Length - 1);
+				}
+				input = input.Remove(i);
+			}
+		}
+		Session.InputBuffer += input;
+	}
+
+	// Update is called once per frame
+	void Update () {
+		if (Input.inputString.Length > 0) {
+			if (Input.inputString[0] == '\r' || Input.inputString[0] == '\n') {
+				History.Add(Session.InputBuffer);
+				Session.Write(Session.InputBuffer);
+				Session.Write("\n");
+				Session.System.Execute(Session.InputBuffer);
+
+				Session.InputBuffer = "";
+			}
+			else {
+				AddToBuffer(Input.inputString);
+			}
+		}
+	}
+}

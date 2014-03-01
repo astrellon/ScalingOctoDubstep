@@ -1,0 +1,79 @@
+﻿using UnityEngine;
+using System;
+using System.Text;
+using System.Collections;
+
+public class Stream {
+
+	protected byte[] Buffer;
+	protected int Start = 0;
+	protected int End = 0;
+
+	public Stream(int length) {
+		Buffer = new byte[length];
+	}
+
+	public int Length() {
+        if (End < Start) {
+            return MaxLength - Start + End;
+        }
+		return End - Start;
+	}
+    public int MaxLength() {
+        return Buffer.Length;
+    }
+	public bool isEof() {
+		return Start == End;
+	}
+	public bool Read(ref string dest, int maxRead) {
+		if (maxRead == 0 || isEof()) {
+			return false;
+		}
+		if (maxRead < 0 || maxRead > Length()) {
+			dest = System.Text.Encoding.Default.GetString(Buffer, Start, Length());
+			Start = End;
+		} else {
+			dest = System.Text.Encoding.Default.GetString(Buffer, Start, maxRead);
+			Start += maxRead;
+		}
+		return true;
+	}
+	public bool Read(byte []dest, int maxRead) {
+		if (maxRead == 0 || Buffer.Length == 0) {
+			return false;
+		}
+		if (maxRead < 0 || maxRead > Length()) {
+			//Buffer.CopyTo(dest, 0, Buffer.Length);
+			System.Array.Copy (Buffer, dest, Buffer.Length);
+			Start = End;
+		} else {
+			//Buffer.CopyTo(0, dest, 0, maxRead);
+			System.Array.Copy (Buffer, dest, maxRead);
+			Start += maxRead;
+		}
+		return true;
+	}
+	
+	public int Write(string data) {
+        int current = Length();
+        if (current + data.Length > MaxLength) {
+            return -1;
+        }
+
+
+		for (int i = 0; i < data.Length; i++) {
+			Buffer[End + i] = (byte)data[i];
+		}
+		End += data.Length;
+	}
+	public int Write(byte []data) {
+        int current = Length();
+        if (current + data.Length > MaxLength) {
+            return -1;
+        }
+
+		Array.Copy (data, 0, Buffer, End, data.Length);
+		End += data.Length;
+	}
+
+}

@@ -1,0 +1,15 @@
+﻿using UnityEngine;
+using System.Collections;
+using System.IO;
+
+public interface Program {
+
+    NixStream StdOut {get; set;}
+    NixStream StdIn {get; set;}
+    NixStream StdErr {get; set;}
+    Thread MainThread {get; set;}
+
+	string GetCommand();
+	int Execute(NixSystem system, Session session, string []argv);
+
+}

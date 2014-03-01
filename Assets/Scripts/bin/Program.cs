@@ -1,0 +1,84 @@
+using System;
+using System.IO;
+using System.Threading;
+using System.Collections.Generic;
+
+public abstract class Program {
+
+    public class ProgramEvent {
+        public int Message {get; private set;}
+        public int Param {get; private set;}
+
+        public ProgramEvent(int message, int param) {
+            Message = message;
+            Param = param;
+        }
+    }
+
+    public NixStream StdOut {get; set;}
+    public NixStream StdIn {get; set;}
+    public NixStream StdErr {get; set;}
+    public Thread MainThread {get; set;}
+    public bool Running {get; protected set;}
+    public NixSystem MainSystem {get; private set;}
+    public Session MainSession {get; private set;}
+    public string []Argv {get; private set;}
+    public int Result {get; protected set;}
+    public Queue<ProgramEvent> Events {get; private set;}
+
+    public Program(NixStream stdout = null, NixStream stdin = null, NixStream stderr = null) {
+		Running = false;
+        Events = new Queue<ProgramEvent>();
+
+        if (stdout == null) {
+            stdout = new NixStream(new MemoryStream());
+        }
+        StdOut = stdout;
+        if (stdin == null) {
+            stdin = new NixStream(new MemoryStream());
+        }
+        StdIn = stdin;
+        if (stderr == null) {
+            stderr = new NixStream(new MemoryStream());
+        }
+        StdErr = stderr;
+        MainThread = new System.Threading.Thread(Run);
+    }
+
+    public void PushEvent(ProgramEvent e) {
+        lock (Events) {
+            Events.Enqueue(e);
+        }
+    }
+    public ProgramEvent PopEvent() {
+        lock (Events) {
+            if (Events.Count > 0) {
+                return Events.Dequeue();
+            }
+            return null;
+        }
+    }
+    public bool HasEvents() {
+        lock (Events) {
+            return Events.Count > 0;
+        }
+    }
+
+    public abstract string GetCommand();
+    public int Execute(NixSystem system, Session session, string []argv) {
+        ExecuteAsync(system, session, argv);
+        MainThread.Join();
+        return Result;
+    }
+
+    public void ExecuteAsync(NixSystem system, Session session, string []argv) {
+        MainSystem = system;
+        MainSession = session;
+        Argv = argv;
+		Running = true;
+        MainThread.Start();
+    }
+
+    protected abstract void Run();
+
+}
