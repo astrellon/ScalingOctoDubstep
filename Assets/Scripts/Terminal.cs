@@ -80,7 +80,7 @@ public class Terminal : MonoBehaviour {
 			CursorY = posY;
 		}
 	}
-    protected int GetNumber(int index, ref int result) {
+    protected int GetCommandNumber(int index, ref int result) {
         if (CommandSequence.Count <= 1) {
             return 0;
         }
@@ -139,28 +139,28 @@ public class Terminal : MonoBehaviour {
                     try
                     {
                         if (data == 'A') {
-                            count = GetNumber(1, ref line);
+                            count = GetCommandNumber(1, ref line);
                             if (line < 0) {
                                 throw new Exception("Invalid 'A' command sequence");
                             }
                             SetCursor(CursorX, CursorY - line);
                         }
                         else if (data == 'B') {
-                            count = GetNumber(1, ref line);
+                            count = GetCommandNumber(1, ref line);
                             if (line < 0) {
                                 throw new Exception("Invalid 'B' command sequence");
                             }
                             SetCursor(CursorX, CursorY + line);
                         }
                         else if (data == 'C') {
-                            count = GetNumber(1, ref column); 
+                            count = GetCommandNumber(1, ref column); 
                             if (column < 0) {
                                 throw new Exception("Invalid 'C' command sequence");
                             }
                             SetCursor(CursorX + column, CursorY);
                         }
                         else if (data == 'D') {
-                            count = GetNumber(1, ref column); 
+                            count = GetCommandNumber(1, ref column); 
                             if (column < 0) {
                                 throw new Exception("Invalid 'D' command sequence");
                             }
@@ -173,8 +173,8 @@ public class Terminal : MonoBehaviour {
                                 column = 0;
                             }
                             else {
-                                count = GetNumber(1, ref line);
-                                count = GetNumber(2 + count, ref column);
+                                count = GetCommandNumber(1, ref line);
+                                count = GetCommandNumber(2 + count, ref column);
                             }
                             if (line < 0 || column < 0) {
                                 throw new Exception("Invalid 'H' command sequence");
