@@ -4,7 +4,7 @@ using System.Collections;
 
 public class Ls : Program {
 
-	public Ls() {
+	public Ls(int pid) : base(pid) {
 		
 	}
     public override string GetCommand() {

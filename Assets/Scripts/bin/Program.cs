@@ -5,11 +5,15 @@ using System.Collections.Generic;
 
 public abstract class Program {
 
+    public static int Unknown = 0;
+    public static int KeyboardDown = 1;
+    public static int KeyboardUp = 2;
+    
     public class ProgramEvent {
         public int Message {get; private set;}
-        public int Param {get; private set;}
+        public object Param {get; private set;}
 
-        public ProgramEvent(int message, int param) {
+        public ProgramEvent(int message, object param) {
             Message = message;
             Param = param;
         }
@@ -19,6 +23,7 @@ public abstract class Program {
     public NixStream StdIn {get; set;}
     public NixStream StdErr {get; set;}
     public Thread MainThread {get; set;}
+    public int Pid {get; private set;}
     public bool Running {get; protected set;}
     public NixSystem MainSystem {get; private set;}
     public Session MainSession {get; private set;}
@@ -26,8 +31,9 @@ public abstract class Program {
     public int Result {get; protected set;}
     public Queue<ProgramEvent> Events {get; private set;}
 
-    public Program(NixStream stdout = null, NixStream stdin = null, NixStream stderr = null) {
+    public Program(int pid, NixStream stdout = null, NixStream stdin = null, NixStream stderr = null) {
 		Running = false;
+        Pid = pid;
         Events = new Queue<ProgramEvent>();
 
         if (stdout == null) {

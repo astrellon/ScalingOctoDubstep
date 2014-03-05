@@ -4,7 +4,7 @@ using System.IO;
 
 public class Cd : Program {
 
-	public Cd() {
+	public Cd(int pid) : base(pid) {
 
 	}
 	public override string GetCommand() {

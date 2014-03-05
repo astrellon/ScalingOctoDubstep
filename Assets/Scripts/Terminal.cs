@@ -138,6 +138,7 @@ public class Terminal : MonoBehaviour {
                     int count = 0;
                     try
                     {
+                        byte last = CommandSequence[CommandSequence.Count - 1];
                         if (data == 'A') {
                             count = GetCommandNumber(1, ref line);
                             if (line < 0) {
@@ -167,7 +168,6 @@ public class Terminal : MonoBehaviour {
                             SetCursor(CursorX - column, CursorY);
                         }
                         else if (data == 'H' || data == 'f') {
-                            byte last = CommandSequence[CommandSequence.Count - 1];
                             if (last == ';' || last == '[') {
                                 line = 0;
                                 column = 0;
@@ -180,6 +180,39 @@ public class Terminal : MonoBehaviour {
                                 throw new Exception("Invalid 'H' command sequence");
                             }
                             SetCursor(column, line);
+                        }
+						else if (data == 'J') {
+							if (last == '[' || last == '0') {
+
+							}
+							else if (last == '1') {
+
+							}
+							else if (last == '2') {
+								Buffer = null;
+								UpdateBufferSize();
+								CursorX = 0;
+								CursorY = 0;
+							}
+							else {
+								throw new Exception("Unknown 'J' command sequence");
+							}
+						}
+                        else if (data == 'K') {
+                            if (last == '[' || last == '0') {
+                                
+                            }
+                            else if (last == '1') {
+
+                            }
+                            else if (last == '2') {
+                                Buffer[CursorY] = new char[Width];
+                                CursorX = 0;
+                            }
+                            else {
+                                throw new Exception("Unknown 'K' command sequence");
+                            }
+
                         }
                         else {
                             Debug.Log("Unknown command sequence");
@@ -207,6 +240,10 @@ public class Terminal : MonoBehaviour {
     }
     void OnGUI() {
         string text = "";
+        if (Event.current.isKey) {
+            Debug.Log("Current event: " + Event.current);
+            MainSession.KeyboardEvent(Event.current);
+        }
         int max = Mathf.Min(Buffer.Count, Height);
         //int max = Mathf.Min(0, Height);
         for (int i = 0; i < max; i++) {
@@ -215,7 +252,9 @@ public class Terminal : MonoBehaviour {
             }
             text += new string(Buffer[i]);
         }
-        text += InputBuffer;
+        if (Session.EchoInput()) {
+            text += Session.InputBuffer;
+        }
         GUI.Label(new Rect(0, 0, Screen.width, Screen.height), text);
 	}
 
@@ -234,6 +273,7 @@ public class Terminal : MonoBehaviour {
 
 	// Update is called once per frame
 	void Update () {
+        
         if (Shell != null) {
             if (Shell.StdOut.Length() > 0) {
                 byte []data = new byte[Shell.StdOut.Length()];
@@ -241,16 +281,10 @@ public class Terminal : MonoBehaviour {
                 Write(data);
             }
         }
-		if (Input.inputString.Length > 0) {
-			if (Input.inputString[0] == '\r' || Input.inputString[0] == '\n') {
-				Write(InputBuffer);
-				Write("\n");
-                Shell.StdIn.Write(InputBuffer);
-				InputBuffer = "";
-			}
-			else {
-				AddToBuffer(Input.inputString);
-			}
-		}
+        /*
+        if (Input.inputString.Length > 0) {
+            Session.(Input.inputString);
+        }
+        */
 	}
 }

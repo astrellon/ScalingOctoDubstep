@@ -3,7 +3,7 @@ using System.Collections;
 
 public class Echo : Program {
 
-	public Echo() {
+	public Echo(int pid) : base(pid) {
 
 	}
 	public override string GetCommand() {

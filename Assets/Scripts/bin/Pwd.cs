@@ -4,7 +4,7 @@ using System;
 
 public class Pwd : Program {
 
-	public Pwd() {
+	public Pwd(int pid) : base(pid) {
 		
 	}
 	public override string GetCommand() {

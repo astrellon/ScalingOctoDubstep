@@ -6,11 +6,11 @@ using UnityEngine;
 public class NixStream : INixStream {
 
     public Stream InternalStream {get; set;}
-    public bool IsFileStream {get; private set;}
+    public bool EchoStream {get; set;}
 
     public NixStream(Stream baseStream) {
+        EchoStream = true;
         InternalStream = baseStream;
-        IsFileStream = baseStream is FileStream;
         Enabled = true;
     }
 
@@ -26,17 +26,12 @@ public class NixStream : INixStream {
 
         int result = 0;
         lock (InternalStream) {
-            if (IsFileStream) {
-                result = InternalStream.Read(dest, offset, maxRead);
-            }
-            else {
-                while (InternalStream.Length == 0) {
-                    Monitor.Wait(InternalStream);
-                }
-                InternalStream.Seek(0, SeekOrigin.Begin);
-                result = InternalStream.Read(dest, offset, maxRead);
-                InternalStream.SetLength(0);
-            }
+			while (InternalStream.Length == 0) {
+				Monitor.Wait(InternalStream);
+			}
+            InternalStream.Seek(0, SeekOrigin.Begin);
+            result = InternalStream.Read(dest, offset, maxRead);
+            InternalStream.SetLength(0);
         }
         string read = System.Text.Encoding.Default.GetString(dest, 0, maxRead);
         return result;
@@ -45,23 +40,16 @@ public class NixStream : INixStream {
 		byte []buffer;
         int result = 0;
 		lock (InternalStream) {
-            if (IsFileStream) {
-                while (InternalStream.Length == 0) {
-                    Monitor.Wait(InternalStream);
-                }
-            }
-            if (maxRead < 0) {
-                maxRead = Length(); 
-            }
+			while (InternalStream.Length == 0) {
+				Monitor.Wait(InternalStream);
+				if (maxRead < 0) {
+					maxRead = Length(); 
+				}
+			}
 			buffer = new byte[maxRead];
-            if (IsFileStream) {
-                result = InternalStream.Read(buffer, 0, maxRead);
-            }
-            else {
-                InternalStream.Seek(0, SeekOrigin.Begin);
-                result = InternalStream.Read(buffer, 0, maxRead);
-                InternalStream.SetLength(0);
-            }
+            InternalStream.Seek(0, SeekOrigin.Begin);
+            result = InternalStream.Read(buffer, 0, maxRead);
+            InternalStream.SetLength(0);
         }
         if (result > 0) {
             dest = System.Text.Encoding.Default.GetString(buffer, 0, maxRead);
@@ -71,9 +59,10 @@ public class NixStream : INixStream {
     }
 
     public void Write(byte []buffer, int offset = 0, int count = -1) {
-        if (!Enabled) {
+        if (!Enabled || buffer == null || buffer.Length == 0) {
             return;
         }
+
         if (count < 0) {
             count = buffer.Length;
         }
@@ -92,7 +81,7 @@ public class NixStream : INixStream {
         }
     } 
     public void Write(string buffer) {
-        if (!Enabled) {
+        if (!Enabled || buffer == null || buffer.Length == 0) {
             return;
         }
         byte[] bytes = new byte[buffer.Length];

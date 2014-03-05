@@ -13,7 +13,11 @@ public class NixSystem : MonoBehaviour {
     public Dictionary<string, Type> BinPrograms {get; set;}
 	public FileSystem RootDrive {get; set;}
     public Dictionary<int, Program> ActivePrograms {get; private set;}
+    public int PidCounter {get; protected set;}
 
+    public int NewPid() {
+        return ++PidCounter;
+    }
 	public void AddProgram(string cmd, Type type) {
 		BinPrograms[cmd] = type; 
 	}
@@ -29,10 +33,11 @@ public class NixSystem : MonoBehaviour {
 		AddProgram("pwd", typeof(Pwd));
 		AddProgram("cd", typeof(Cd));
 		AddProgram("ls", typeof(Ls));
-        
-        BaseSession = new Session();
-        Shell = new Bash();
+		AddProgram("clear", typeof(Clear));
 
+        BaseSession = new Session();
+        Shell = new Bash(NewPid());
+        BaseSession.Shell = Shell;
 
 		Terminal term = GetComponent<Terminal>();
 		if (term != null) {
@@ -44,17 +49,18 @@ public class NixSystem : MonoBehaviour {
 	}
 
 	public bool BeginBoot() {
-		Shell.StdOut.Write("Boot\n");
-		Shell.StdOut.Write("Compl\n");
-        Shell.StdOut.Write(0x1b);
-        Shell.StdOut.Write("[0;0H");
-        Shell.StdOut.Write("OMG");
+		Shell.StdOut.Write("Booting...\n");
+		Shell.StdOut.Write("Booting Complete...\n");
         
         Shell.ExecuteAsync(this, BaseSession, new string[]{""});
 		return true;
 	}
 
-	public void Execute(string input) {
+	public void Execute(Session session, string input) {
+        Debug.Log("Execute: >" + input + "<");
+        if (input.Length == 0) {
+            return;
+        }
 		Regex regex = new Regex("(\".*\")|([^ \\t\\n\\r]+)");
 
 		MatchCollection matches = regex.Matches(input);
@@ -77,12 +83,14 @@ public class NixSystem : MonoBehaviour {
 
 		if (BinPrograms.ContainsKey(binName)) {
             Debug.Log("Attempting to create program: " + binName);
-            Program prog = (Program)Activator.CreateInstance(BinPrograms[binName]);
+            Program prog = (Program)Activator.CreateInstance(BinPrograms[binName], NewPid());
             
             if (prog != null) {
                 prog.StdOut = Shell.StdOut;
+                session.PushForegroundProgram(prog);
                 Debug.Log("Attempting to run program: " + binName);
-                prog.Execute(this, BaseSession, args);
+                prog.Execute(this, session, args);
+                session.PopForegroundProgram();
                 Debug.Log("Fin " + binName);
             }
             else {
@@ -93,6 +101,5 @@ public class NixSystem : MonoBehaviour {
 			Shell.StdOut.Write("Unable to find command: " + binName);
 			Shell.StdOut.Write("\n");
 		}
-		//BaseStdOut.BeginNewInput();
 	}
 }
