@@ -37,6 +37,9 @@ public class Bash : Program {
         StdOut.Write(MainSession.WorkingDirectory.ToString());
         StdOut.Write("> ");
     }
+    protected void AutocompleteInput() {
+        
+    }
     protected override void Run() {
         StdIn.EchoStream = false;
         /*string path = MainSystem.RootDrive.GetPathTo("test.out"); 
@@ -53,10 +56,10 @@ public class Bash : Program {
         BeginInput();
         while (Running) {
             while (HasEvents()) {
-                ProgramEvent e = PopEvent();
-                if (e.Message == Program.KeyboardDown) {
-                    Event unityEvent = (Event)e.Param;
-                    char c = unityEvent.character;
+                Program.ProgramEvent progEvent = PopEvent();
+                if (progEvent.Message == Program.KeyboardDown) {
+                    Program.KeyboardEvent keyEvent = (Program.KeyboardEvent)progEvent;
+                    char c = keyEvent.Character;
                     if (c != '\0') {
                         if (c == '\r' || c == '\n') {
                             StdOut.Write("\n");
@@ -66,14 +69,16 @@ public class Bash : Program {
                         }
                         else {
                             if (c == '\b') {
-                                InputBuffer = InputBuffer.Remove(InputBuffer.Length - 1);
+                                if (InputBuffer.Length > 0) {
+                                    InputBuffer = InputBuffer.Remove(InputBuffer.Length - 1);
+                                    StdOut.Write((byte)'\b');
+                                }
                             }
                             else {
                                 InputBuffer += c; 
+                                StdOut.Write((byte)c);
+
                             }
-                            StdOut.Write(0x1b);
-                            StdOut.Write("[2K");
-                            StdOut.Write(InputBuffer);
                         }
                     }
                 }

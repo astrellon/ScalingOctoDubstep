@@ -13,7 +13,7 @@ public class Terminal : MonoBehaviour {
 	public int CursorX {get; set;}
 	public int CursorY {get; set;}
 	public string InputBuffer {get; set;}
-    public Session Session {get; set;}
+    public Session CurrentSession {get; set;}
     public Program Shell {get; set;}
     protected List<byte> CommandSequence = null;
 
@@ -241,8 +241,7 @@ public class Terminal : MonoBehaviour {
     void OnGUI() {
         string text = "";
         if (Event.current.isKey) {
-            Debug.Log("Current event: " + Event.current);
-            MainSession.KeyboardEvent(Event.current);
+            CurrentSession.KeyboardEvent(Event.current);
         }
         int max = Mathf.Min(Buffer.Count, Height);
         //int max = Mathf.Min(0, Height);
@@ -252,8 +251,8 @@ public class Terminal : MonoBehaviour {
             }
             text += new string(Buffer[i]);
         }
-        if (Session.EchoInput()) {
-            text += Session.InputBuffer;
+        if (CurrentSession.EchoInput()) {
+            text += CurrentSession.InputBuffer;
         }
         GUI.Label(new Rect(0, 0, Screen.width, Screen.height), text);
 	}
@@ -283,7 +282,7 @@ public class Terminal : MonoBehaviour {
         }
         /*
         if (Input.inputString.Length > 0) {
-            Session.(Input.inputString);
+            CurrentSession.(Input.inputString);
         }
         */
 	}

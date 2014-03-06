@@ -11,11 +11,18 @@ public abstract class Program {
     
     public class ProgramEvent {
         public int Message {get; private set;}
-        public object Param {get; private set;}
 
-        public ProgramEvent(int message, object param) {
+        public ProgramEvent(int message) {
             Message = message;
-            Param = param;
+        }
+    }
+    public class KeyboardEvent : ProgramEvent {
+        public char Character {get; private set;}
+        public int KeyCode {get; private set;}
+
+        public KeyboardEvent(int type, char character, int keyCode) : base(type) {
+            Character = character;
+            KeyCode = keyCode;
         }
     }
 

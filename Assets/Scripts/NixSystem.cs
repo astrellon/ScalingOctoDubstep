@@ -9,7 +9,6 @@ public class NixSystem : MonoBehaviour {
 
     public Session BaseSession {get; set;}
     public Program Shell {get; private set;}
-	//public Dictionary<string, Program> BinPrograms {get; set;}
     public Dictionary<string, Type> BinPrograms {get; set;}
 	public FileSystem RootDrive {get; set;}
     public Dictionary<int, Program> ActivePrograms {get; private set;}
@@ -42,7 +41,7 @@ public class NixSystem : MonoBehaviour {
 		Terminal term = GetComponent<Terminal>();
 		if (term != null) {
     	    term.Shell = Shell;
-            term.Session = BaseSession;
+            term.CurrentSession = BaseSession;
 		}
 
 		BeginBoot();

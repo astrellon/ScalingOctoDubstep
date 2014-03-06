@@ -55,24 +55,6 @@ public class Session {
         return defaultValue;
     }
 
-    /*public void KeyboardInput(string input) {
-        if (input.Length == 0) {
-            return;
-        }
-        if (input[0] == '\r' || input[0] == '\n') {
-            if (ForegroundProgram != null) {
-                ForegroundProgram.StdIn.Write(InputBuffer);
-                ForegroundProgram.PushEvent(new Program.ProgramEvent(1, input));
-                InputBuffer = "";
-            }
-        }
-        else {
-            InputBuffer += input; 
-            if (ForegroundProgram != null) {
-                ForegroundProgram.PushEvent(new Program.ProgramEvent(1, input));
-            }
-        }
-    }*/
     public void KeyboardEvent(Event e) {
         if (e.type == EventType.KeyDown) {
             if (e.character == '\r' || e.character == '\n') {
@@ -85,12 +67,12 @@ public class Session {
                 InputBuffer += e.character;
             }
             if (ForegroundProgram != null) {
-                ForegroundProgram.PushEvent(new Program.ProgramEvent(Program.KeyboardDown, e));
+                ForegroundProgram.PushEvent(new Program.KeyboardEvent(Program.KeyboardDown, e.character, (int)e.keyCode));
             }
         }
         else if (e.type == EventType.KeyUp) {
             if (ForegroundProgram != null) {
-                ForegroundProgram.PushEvent(new Program.ProgramEvent(Program.KeyboardUp, e));
+                ForegroundProgram.PushEvent(new Program.KeyboardEvent(Program.KeyboardUp, e.character, (int)e.keyCode));
             }
         }
     }
