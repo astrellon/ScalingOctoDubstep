@@ -8,22 +8,29 @@ public class Terminal : MonoBehaviour {
 	public NixSystem System {get; set;}
 	public int Width {get; set;}
 	public int Height {get; set;}
+    public int MaxHeight {get; set;}
 	public List<char[]> Buffer {get; private set;}
-	public int Cursor {get; set;}
 	public int CursorX {get; set;}
 	public int CursorY {get; set;}
+	public int SavedCursorX {get; set;}
+	public int SavedCursorY {get; set;}
 	public string InputBuffer {get; set;}
     public Session CurrentSession {get; set;}
     public Program Shell {get; set;}
     protected List<byte> CommandSequence = null;
+    public int ScrollX {get; set;}
+    public int ScrollY {get; set;}
 
 	public Terminal(int width = 80, int height = 25) {
 	}
     public void Start() {
 		Width = 80;
-		Height = 25;
+		Height = 16;
+        MaxHeight = 20;
 		CursorX = 0;
 		CursorY = 0;
+        ScrollX = 0;
+        ScrollY = 0;
 
 		UpdateBufferSize();
     }
@@ -70,7 +77,19 @@ public class Terminal : MonoBehaviour {
 				posX = 0;
 				while (Buffer.Count <= posY) {
 					Buffer.Add(new char[Width]);
+                    if (Buffer.Count > MaxHeight) {
+                        try {
+                        //Buffer.RemoveAt(0);
+                        }
+                        catch (Exception ex) {
+                            Debug.Log("Unable to remove: " + ex.Message);
+                        }
+                    }
 				}
+                ScrollY = Buffer.Count - Height;
+                if (ScrollY < 0) {
+                    ScrollY = 0;
+                }
 			}
 			else {
 				Buffer[posY][posX] = (char)data;
@@ -139,6 +158,7 @@ public class Terminal : MonoBehaviour {
                     try
                     {
                         byte last = CommandSequence[CommandSequence.Count - 1];
+                        // Move cursor up
                         if (data == 'A') {
                             count = GetCommandNumber(1, ref line);
                             if (line < 0) {
@@ -146,6 +166,7 @@ public class Terminal : MonoBehaviour {
                             }
                             SetCursor(CursorX, CursorY - line);
                         }
+                        // Move cursor down
                         else if (data == 'B') {
                             count = GetCommandNumber(1, ref line);
                             if (line < 0) {
@@ -153,6 +174,7 @@ public class Terminal : MonoBehaviour {
                             }
                             SetCursor(CursorX, CursorY + line);
                         }
+                        // Move cursor right
                         else if (data == 'C') {
                             count = GetCommandNumber(1, ref column); 
                             if (column < 0) {
@@ -160,6 +182,7 @@ public class Terminal : MonoBehaviour {
                             }
                             SetCursor(CursorX + column, CursorY);
                         }
+                        // Move cursor left
                         else if (data == 'D') {
                             count = GetCommandNumber(1, ref column); 
                             if (column < 0) {
@@ -167,6 +190,7 @@ public class Terminal : MonoBehaviour {
                             }
                             SetCursor(CursorX - column, CursorY);
                         }
+                        // Move cursor to position on the screen
                         else if (data == 'H' || data == 'f') {
                             if (last == ';' || last == '[') {
                                 line = 0;
@@ -181,30 +205,44 @@ public class Terminal : MonoBehaviour {
                             }
                             SetCursor(column, line);
                         }
+                        // Clear screen
 						else if (data == 'J') {
+                            // Clear down from the cursor
 							if (last == '[' || last == '0') {
 
 							}
+                            // Clear up from the cursor
 							else if (last == '1') {
 
 							}
+                            // Clear entire screen
 							else if (last == '2') {
 								Buffer = null;
 								UpdateBufferSize();
 								CursorX = 0;
 								CursorY = 0;
+                                ScrollY = 0;
 							}
 							else {
 								throw new Exception("Unknown 'J' command sequence");
 							}
 						}
+                        // Clear line
                         else if (data == 'K') {
+                            // Clear to the right of the cursor
                             if (last == '[' || last == '0') {
-                                
+                                for (int i = CursorX; i < Width; i++) {
+                                    Buffer[CursorY][i] = '\0';
+                                }
                             }
+                            // Clear to the left of the cursor
                             else if (last == '1') {
-
+                                for (int i = 0; i <= CursorX; i++) {
+                                    Buffer[CursorY][i] = '\0';
+                                }
+                                CursorX = 0;
                             }
+                            // Clear entire line
                             else if (last == '2') {
                                 Buffer[CursorY] = new char[Width];
                                 CursorX = 0;
@@ -213,6 +251,16 @@ public class Terminal : MonoBehaviour {
                                 throw new Exception("Unknown 'K' command sequence");
                             }
 
+                        }
+                        // Save cursor position
+                        else if (data == 's') {
+                            SavedCursorX = CursorX;
+                            SavedCursorY = CursorY;
+                        }
+                        // Restore cursor position
+                        else if (data == 'u') {
+                            CursorX = SavedCursorX;
+                            CursorY = SavedCursorY;
                         }
                         else {
                             Debug.Log("Unknown command sequence");
@@ -235,6 +283,7 @@ public class Terminal : MonoBehaviour {
 	}
     public void Write(byte []data) {
         for (int i = 0; i < data.Length; i++) {
+            //Debug.Log("Writing to terminal (" + i + "/" + data.Length + "): " + data[i]);
             Write(data[i]);
         }
     }
@@ -242,11 +291,19 @@ public class Terminal : MonoBehaviour {
         string text = "";
         if (Event.current.isKey) {
             CurrentSession.KeyboardEvent(Event.current);
+            if (Event.current.type == EventType.KeyDown) {
+                if (Event.current.keyCode == KeyCode.PageUp) {
+                    ScrollY = Mathf.Max(0, ScrollY - 1);
+                }
+                else if (Event.current.keyCode == KeyCode.PageDown) {
+                    ScrollY = Mathf.Min(Buffer.Count - 1, ScrollY + 1);
+                }
+            }
         }
-        int max = Mathf.Min(Buffer.Count, Height);
+        int max = Mathf.Min(Buffer.Count, Height + ScrollY);
         //int max = Mathf.Min(0, Height);
-        for (int i = 0; i < max; i++) {
-            if (i > 0) {
+        for (int i = ScrollY; i < max; i++) {
+            if (i > ScrollY) {
                 text += "\n";
             }
             text += new string(Buffer[i]);
