@@ -21,6 +21,8 @@ public class Terminal : MonoBehaviour {
     public int ScrollX {get; set;}
     public int ScrollY {get; set;}
 
+    protected GUIStyle style;
+
 	public Terminal(int width = 80, int height = 25) {
 	}
     public void Start() {
@@ -31,6 +33,11 @@ public class Terminal : MonoBehaviour {
 		CursorY = 0;
         ScrollX = 0;
         ScrollY = 0;
+
+        Font f = (Font)Resources.LoadAssetAtPath(@"Assets\Fonts\LiberationMono-Regular.ttf", typeof(Font));
+        style = new GUIStyle();
+        style.fontSize = 11;
+        style.font = f;
 
 		UpdateBufferSize();
     }
@@ -288,7 +295,7 @@ public class Terminal : MonoBehaviour {
         }
     }
     void OnGUI() {
-        string text = "";
+        string text = "<color=white>";
         if (Event.current.isKey) {
             CurrentSession.KeyboardEvent(Event.current);
             if (Event.current.type == EventType.KeyDown) {
@@ -311,7 +318,8 @@ public class Terminal : MonoBehaviour {
         if (CurrentSession.EchoInput()) {
             text += CurrentSession.InputBuffer;
         }
-        GUI.Label(new Rect(0, 0, Screen.width, Screen.height), text);
+        text += "</color>";
+        GUI.Label(new Rect(0, 0, Screen.width, Screen.height), text, style);
 	}
 
 	void AddToBuffer(string input) {
