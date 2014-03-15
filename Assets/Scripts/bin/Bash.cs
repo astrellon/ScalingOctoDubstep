@@ -12,20 +12,22 @@ public class Bash : Program {
     public List<string> History {get; private set;}
     public int HistoryPosition {get; private set;}
     public string InputBuffer {get; private set;}
+    public Regex Parser {get; private set;}
 
     public Bash(int pid) : base(pid) {
         History = new List<string>();
         InputBuffer = "";
         HistoryPosition = -1;
+
+        Parser = new Regex("(\\$[a-zA-Z][a-zA-Z0-9]*)|([^\\$]+)"); 
     }
 
     public override string GetCommand() {
         return "bash";
     }
     public void Parse(string input) {
-		Regex r = new Regex("(\\$[a-zA-Z][a-zA-Z0-9]*)|([^\\$]+)");
 		string result = "";
-		foreach (Match m in r.Matches(input)) {
+		foreach (Match m in Parser.Matches(input)) {
 			if (m.Value[0] == '$') {
                 result += MainSession.GetEnvValue(m.Value.Substring(1));
 			}
@@ -41,8 +43,84 @@ public class Bash : Program {
         StdOut.Write(0x1b);
         StdOut.Write("[s");
     }
-    protected void AutocompleteInput() {
-        
+    protected string AutocompleteInput(string input, int cursor) {
+        string result = "";
+        string substr = "";
+        int startPos = 0;
+        int endPos = input.Length;
+        for (int i = cursor; i >= 0; i--) {
+            char c = input[i];
+            if (c == ' ' || c == '\t') {
+                startPos = i + 1;
+                break;
+            }
+        }
+        for (int i = cursor; i < input.Length; i++) {
+            char c = input[i];
+            if (c == ' ' || c == '\t') {
+                endPos = i;
+                break;
+            }
+        }
+
+        if (startPos >= endPos) {
+            return input;
+        }
+
+        if (startPos > 0) {
+            result = input.Substring(0, startPos);
+            Debug.Log("Starting result at: >" + result + "<");
+        }
+
+        Debug.Log("Start/End: " + startPos + ", " + endPos);
+        string strToComplete = input.Substring(startPos, endPos - startPos);
+        Debug.Log("Str to complete: >" + strToComplete + "<");
+        if (strToComplete[0] == '$') {
+            List<string> matches = CheckEnvVariable(strToComplete, false);
+            if (matches.Count == 1) {
+                strToComplete = matches[0];
+            }
+        }
+        else {
+            List<string> matches = CheckBinProgram(strToComplete, false);
+            if (matches.Count == 1) {
+                strToComplete = matches[0];
+            }
+        }
+
+        result += strToComplete;
+        if (endPos < input.Length) {
+            result += input.Substring(endPos);
+        }
+
+        return result;
+    }
+    protected List<string> CheckEnvVariable(string input, bool onlyOne) {
+        List<string> result = new List<string>();
+        if (input[0] == '$') {
+            string varName = input.Substring(1, input.Length - 2);
+            foreach (KeyValuePair<string, string> pair in MainSession.EnvironmentVariables) {
+                if (pair.Key.IndexOf(varName) == 0) {
+                    result.Add("$" + pair.Key);
+                    if (onlyOne) {
+                        break;
+                    }
+                }
+            }
+        }
+        return result;
+    }
+    protected List<string> CheckBinProgram(string input, bool onlyOne) {
+        List<string> result = new List<string>();
+        foreach (KeyValuePair<string, Type> pair in MainSystem.BinPrograms) {
+            if (pair.Key.IndexOf(input) == 0) {
+                result.Add(pair.Key);
+                if (onlyOne) {
+                    break;
+                }
+            }
+        }
+        return result;
     }
     protected void ProcessKeyboardEvent(Program.KeyboardEvent keyEvent) {
         char c = keyEvent.Character;
@@ -57,6 +135,9 @@ public class Bash : Program {
                 Parse(InputBuffer);
                 BeginInput();
                 InputBuffer = "";
+            }
+            else if (c == '\t') {
+                InputBuffer = AutocompleteInput(InputBuffer, InputBuffer.Length - 1);
             }
             else {
                 InputBuffer += c; 
@@ -101,6 +182,12 @@ public class Bash : Program {
         }
     }
     protected override void Run() {
+        try {
+        Debug.Log("Auto complete: " + AutocompleteInput("ec $HO", 1));
+        }
+        catch (Exception exp) {
+            Debug.Log("Exception: " + exp.Message + "\n" + exp.StackTrace);
+        }
         StdIn.EchoStream = false;
         /*string path = MainSystem.RootDrive.GetPathTo("test.out"); 
         Debug.Log("Path: " + path);
