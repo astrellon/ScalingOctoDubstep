@@ -10,7 +10,7 @@ public class FileSystem {
 	}
 
 	public FileNode []ListFiles(string path) {
-		string tpath = RootFolder + path;
+		string tpath = GetPathTo(path);
 		if (!Directory.Exists(tpath)) {
 			return null;
 		}
@@ -28,7 +28,27 @@ public class FileSystem {
 		return RootFolder + relative;
 	}
 	public bool IsDirectory(string path) {
-		string tpath = RootFolder + path;
+		string tpath = GetPathTo(path);
 		return Directory.Exists(tpath);
 	}
+    public bool IsDirectory(NixPath path) {
+        string tpath = GetPathTo(path.ToString());
+        return Directory.Exists(tpath);
+    }
+    public bool IsFile(string path) {
+        string tpath = GetPathTo(path);
+        return File.Exists(tpath);
+    }
+    public bool IsFile(NixPath path) {
+        string tpath = GetPathTo(path.ToString());
+        return File.Exists(tpath);
+    }
+    public bool IsFileOrDirectory(string path) {
+        string tpath = GetPathTo(path);
+        return File.Exists(tpath) || Directory.Exists(tpath);
+    }
+    public bool IsFileOrDirectory(NixPath path) {
+        string tpath = GetPathTo(path.ToString());
+        return File.Exists(tpath) || Directory.Exists(tpath);
+    }
 }

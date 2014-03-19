@@ -86,6 +86,17 @@ public class Bash : Program {
             if (matches.Count == 1) {
                 strToComplete = matches[0];
             }
+            else if (matches.Count == 0) {
+                try {
+                    matches = CheckFiles(strToComplete, false);
+                    if (matches.Count == 1) {
+                        strToComplete = matches[0];
+                    }
+                }
+                catch (Exception ex) {
+                    Debug.Log("EXCEP: " + ex.Message + "\n" + ex.StackTrace);
+                }
+            }
         }
 
         result += strToComplete;
@@ -117,6 +128,53 @@ public class Bash : Program {
                 result.Add(pair.Key);
                 if (onlyOne) {
                     break;
+                }
+            }
+        }
+        return result;
+    }
+    protected List<string> CheckFiles(string input, bool onlyOne) {
+        List<string> result = new List<string>();
+        if (input == null || input.Length == 0) {
+            return result;
+        }
+
+        // Path is already correct?
+        // Extend to deal with situations where the file/folder already exists
+        // but there are other entires that will still match it.
+        NixPath full = MainSession.WorkingDirectory.Combine(input);
+        if (full.IsRoot() || 
+            MainSystem.RootDrive.IsFile(full) ||
+            MainSystem.RootDrive.IsDirectory(full)) {
+            return result;
+        }
+        int index = input.LastIndexOf('/');
+        string filename = input;
+        string baseinput = "";
+        if (index >= 0) {
+            filename = input.Substring(index + 1);
+            baseinput = input.Substring(0, index);
+        }
+
+        NixPath combined = MainSession.WorkingDirectory.Combine(baseinput);
+        if (MainSystem.RootDrive.IsDirectory(combined)) {
+            FileNode []files = MainSystem.RootDrive.ListFiles(combined.ToString());
+            if (files != null) {
+                for (int i = 0; i < files.Length; i++) {
+                    FileInfo info = files[i].Info;
+                    if (info.Name.IndexOf(filename) == 0) {
+                        string entry = info.Name;
+                        
+                        if (baseinput.Length > 0) {
+                            entry = baseinput + "/" + entry;
+                        }
+                        if (info.Attributes == FileAttributes.Directory) {
+                            result.Add(entry + "/");            
+                        }
+                        else {
+                            result.Add(entry);
+                        }
+                    }
                 }
             }
         }
@@ -183,7 +241,7 @@ public class Bash : Program {
     }
     protected override void Run() {
         try {
-        Debug.Log("Auto complete: " + AutocompleteInput("ec $HO", 1));
+            //CheckFiles("home/al", false);
         }
         catch (Exception exp) {
             Debug.Log("Exception: " + exp.Message + "\n" + exp.StackTrace);

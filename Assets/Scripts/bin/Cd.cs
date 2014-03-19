@@ -17,7 +17,6 @@ public class Cd : Program {
 		}
 
 		NixPath newPath = MainSession.WorkingDirectory.Combine(Argv[0]);
-
 		if (MainSystem.RootDrive.IsDirectory(newPath.ToString())) {
 			MainSession.WorkingDirectory = newPath;
 		}
@@ -27,3 +26,4 @@ public class Cd : Program {
 		return;
 	}
 }
+

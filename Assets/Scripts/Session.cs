@@ -25,10 +25,12 @@ public class Session {
 
     public Session() {
         WorkingDirectory = new NixPath();
+        WorkingDirectory.Absolute = true;
         ActiveStack = new Stack<Program>();
         EnvironmentVariables = new Dictionary<string, string>();
         EnvironmentVariables["HOSTNAME"] = "Unknown host";
         EnvironmentVariables["USER"] = "Alan";
+        EnvironmentVariables["HOSTTYPE"] = "magic";
     }
 
     public void PushForegroundProgram(Program program) {
