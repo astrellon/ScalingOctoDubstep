@@ -21,7 +21,7 @@ public class Ls : Program {
 			for (int i = 0; i < files.Length; i++) {
 				FileInfo info = files[i].Info;
 				StdOut.Write(info.Name);
-				if (info.Attributes == FileAttributes.Directory) {
+				if ((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory) {
 					StdOut.Write("/");
 				}
 				StdOut.Write("\n");

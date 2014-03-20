@@ -18,7 +18,7 @@ public class Cd : Program {
 
 		NixPath newPath = MainSession.WorkingDirectory.Combine(Argv[0]);
 		if (MainSystem.RootDrive.IsDirectory(newPath.ToString())) {
-			MainSession.WorkingDirectory = newPath;
+			MainSession.SetWorkingDirectory(newPath);
 		}
 		else {
 			StdOut.Write(newPath.ToString() + " is not a directory.\n");

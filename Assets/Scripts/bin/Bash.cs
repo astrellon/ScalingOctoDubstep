@@ -25,23 +25,31 @@ public class Bash : Program {
     public override string GetCommand() {
         return "bash";
     }
-    public void Parse(string input) {
+    public string Parse(string input) {
 		string result = "";
 		foreach (Match m in Parser.Matches(input)) {
-			if (m.Value[0] == '$') {
+			if (m.Value[0] == '$' && m.Value.Length > 1) {
                 result += MainSession.GetEnvValue(m.Value.Substring(1));
 			}
 			else {
 				result += m.Value;
 			}
 		}
-        MainSystem.Execute(MainSession, result);
+		return result;
     }
     public void BeginInput() {
-        StdOut.Write(MainSession.WorkingDirectory.ToString());
+        //StdOut.Write(MainSession.WorkingDirectory.ToString());
+		StdOut.Write(0x1b);
+		StdOut.Write ("[0;32m");
+		string parsed = Parse ("$USER@$HOSTNAME:$PWD$");
+		StdOut.Write (parsed);
+		StdOut.Write(0x1b);
+		StdOut.Write ("[0m");
         StdOut.Write("> ");
         StdOut.Write(0x1b);
         StdOut.Write("[s");
+		StdOut.Write(0x1b);
+		StdOut.Write("[37;m");
     }
     protected string AutocompleteInput(string input, int cursor) {
         string result = "";
@@ -69,12 +77,9 @@ public class Bash : Program {
 
         if (startPos > 0) {
             result = input.Substring(0, startPos);
-            Debug.Log("Starting result at: >" + result + "<");
         }
 
-        Debug.Log("Start/End: " + startPos + ", " + endPos);
         string strToComplete = input.Substring(startPos, endPos - startPos);
-        Debug.Log("Str to complete: >" + strToComplete + "<");
         if (strToComplete[0] == '$') {
             List<string> matches = CheckEnvVariable(strToComplete, false);
             if (matches.Count == 1) {
@@ -190,7 +195,8 @@ public class Bash : Program {
                     History.Add(InputBuffer);
                 }
                 HistoryPosition = History.Count;
-                Parse(InputBuffer);
+                string result = Parse(InputBuffer);
+				MainSystem.Execute(MainSession, result);
                 BeginInput();
                 InputBuffer = "";
             }
@@ -240,12 +246,6 @@ public class Bash : Program {
         }
     }
     protected override void Run() {
-        try {
-            //CheckFiles("home/al", false);
-        }
-        catch (Exception exp) {
-            Debug.Log("Exception: " + exp.Message + "\n" + exp.StackTrace);
-        }
         StdIn.EchoStream = false;
         /*string path = MainSystem.RootDrive.GetPathTo("test.out"); 
         Debug.Log("Path: " + path);

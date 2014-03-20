@@ -31,7 +31,13 @@ public class Session {
         EnvironmentVariables["HOSTNAME"] = "Unknown host";
         EnvironmentVariables["USER"] = "Alan";
         EnvironmentVariables["HOSTTYPE"] = "magic";
+		EnvironmentVariables["PWD"] = WorkingDirectory.ToString();
     }
+
+	public void SetWorkingDirectory(NixPath path) {
+		WorkingDirectory = path;
+		EnvironmentVariables ["PWD"] = path.ToString();
+	}
 
     public void PushForegroundProgram(Program program) {
         if (ForegroundProgram != null) {

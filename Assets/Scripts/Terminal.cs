@@ -2,14 +2,20 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 
 public class Terminal : MonoBehaviour {
 
+	public struct BufferProperty {
+		public int Colour;
+		public bool Bold;
+	}
 	public NixSystem System {get; set;}
 	public int Width {get; set;}
 	public int Height {get; set;}
     public int MaxHeight {get; set;}
 	public List<char[]> Buffer {get; private set;}
+	public List<BufferProperty[]> BufferProperties { get; private set; }
 	public int CursorX {get; set;}
 	public int CursorY {get; set;}
 	public int SavedCursorX {get; set;}
@@ -20,6 +26,9 @@ public class Terminal : MonoBehaviour {
     protected List<byte> CommandSequence = null;
     public int ScrollX {get; set;}
     public int ScrollY {get; set;}
+
+	private BufferProperty CurrentProperty;
+	public Dictionary<string, int[]> Colours { get; private set; }
 
     protected GUIStyle style;
 
@@ -34,6 +43,13 @@ public class Terminal : MonoBehaviour {
         ScrollX = 0;
         ScrollY = 0;
 
+		Colours = new Dictionary<string, int[]> ();
+		Colours ["xterm"] = new int[]{
+			0x000000, 0xcd0000, 0x00cd00, 0xcdcd00, 0x0000ee, 0xcd00cd, 0x00cdcd, 0xe5e5e5,
+			0x7f7f7f, 0xff0000, 0x00ff00, 0xffff00, 0x5c5cff, 0xff00ff, 0x00ffff, 0xffffff};
+
+		CurrentProperty.Colour = Colours["xterm"][7];
+
         Font f = (Font)Resources.LoadAssetAtPath(@"Assets\Fonts\LiberationMono-Regular.ttf", typeof(Font));
         style = new GUIStyle();
         style.fontSize = 11;
@@ -46,6 +62,10 @@ public class Terminal : MonoBehaviour {
 		if (Buffer == null) {
 			Buffer = new List<char[]>();
 			Buffer.Add(new char[Width]);
+		}
+		if (BufferProperties == null) {
+			BufferProperties = new List<BufferProperty[]> ();
+			BufferProperties.Add (new BufferProperty[Width]);
 		}
 	}
 
@@ -71,7 +91,7 @@ public class Terminal : MonoBehaviour {
 					posY = 0;
 				}
 			}
-			Buffer[posY][posX] = '\0';
+			SetCharacter(posY, posX, '\0');
 
 			CursorX = posX;
 			CursorY = posY;
@@ -84,6 +104,8 @@ public class Terminal : MonoBehaviour {
 				posX = 0;
 				while (Buffer.Count <= posY) {
 					Buffer.Add(new char[Width]);
+					BufferProperties.Add(new BufferProperty[Width]);
+
                     if (Buffer.Count > MaxHeight) {
                         try {
                         //Buffer.RemoveAt(0);
@@ -99,7 +121,7 @@ public class Terminal : MonoBehaviour {
                 }
 			}
 			else {
-				Buffer[posY][posX] = (char)data;
+				SetCharacter(posY, posX, (char)data);
                 posX++;
 			}
 			CursorX = posX;
@@ -141,9 +163,13 @@ public class Terminal : MonoBehaviour {
         CursorY = line;
         if (CursorY < 0) {
             CursorY = 0;
-        }
-        
+        }   
     }
+	protected void SetCharacter(int y, int x, char c) {
+		Buffer[y][x] = c;
+		BufferProperties[y][x].Colour = CurrentProperty.Colour;
+		BufferProperties[y][x].Bold = CurrentProperty.Bold;
+	}
     protected void ParseCommand(byte data) {
         if (CommandSequence.Count == 0) {
             if (data == '[') {
@@ -225,6 +251,7 @@ public class Terminal : MonoBehaviour {
                             // Clear entire screen
 							else if (last == '2') {
 								Buffer = null;
+								BufferProperties = null;
 								UpdateBufferSize();
 								CursorX = 0;
 								CursorY = 0;
@@ -239,19 +266,20 @@ public class Terminal : MonoBehaviour {
                             // Clear to the right of the cursor
                             if (last == '[' || last == '0') {
                                 for (int i = CursorX; i < Width; i++) {
-                                    Buffer[CursorY][i] = '\0';
+									SetCharacter(CursorY, i, '\0');
                                 }
                             }
                             // Clear to the left of the cursor
                             else if (last == '1') {
                                 for (int i = 0; i <= CursorX; i++) {
-                                    Buffer[CursorY][i] = '\0';
+									SetCharacter(CursorY, i, '\0');
                                 }
                                 CursorX = 0;
                             }
                             // Clear entire line
                             else if (last == '2') {
                                 Buffer[CursorY] = new char[Width];
+								BufferProperties[CursorY] = new BufferProperty[Width];
                                 CursorX = 0;
                             }
                             else {
@@ -269,12 +297,40 @@ public class Terminal : MonoBehaviour {
                             CursorX = SavedCursorX;
                             CursorY = SavedCursorY;
                         }
+						else if (data == 'm') {
+							int attr = -1;
+							int i = 1;
+							while (i < CommandSequence.Count) {
+								if ((char)CommandSequence[i] == ';') {
+									i++;
+								}
+								count = GetCommandNumber(i, ref attr);
+								i += count;
+								Debug.Log ("ATTR: " + attr);
+
+								if (attr == 0) {
+									CurrentProperty.Bold = false;
+									CurrentProperty.Colour = Colours["xterm"][7];
+								}
+								else if (attr == 1) {
+									CurrentProperty.Bold = true;
+								}
+								else if (attr == 2) {
+									CurrentProperty.Bold = false;
+								}
+								else if (attr >= 30 && attr <= 37) {
+									int bolden = CurrentProperty.Bold ? 10 : 0;
+									int index = attr - 30 + bolden;
+									CurrentProperty.Colour = Colours["xterm"][index];
+								}
+							}
+						}
                         else {
                             Debug.Log("Unknown command sequence");
                         }
                     }
                     catch (Exception exp) {
-                        Debug.Log(exp.Message);
+                        Debug.Log(exp.Message + " | " + exp.StackTrace);
                     }
                     finally {
                         CommandSequence = null;
@@ -294,8 +350,50 @@ public class Terminal : MonoBehaviour {
             Write(data[i]);
         }
     }
+	public string GetGUIString(int max) {
+		int currentColour = 0xffffff;
+		bool currentBold = false;
+		StringBuilder builder = new StringBuilder (Width * (max - ScrollY));
+		builder.Append ("<color=white>");
+		for (int i = ScrollY; i < max; i++) {
+			if (i > ScrollY) {
+				builder.Append('\n');
+			}
+
+			char []text = Buffer[i];
+			BufferProperty []props = BufferProperties[i];
+			for (int j = 0; j < text.Length; j++) {
+				bool bold = props[j].Bold;
+				int c = props[j].Colour & 0xffffff;
+				if (c != currentColour) {
+					builder.Append("</color><color=#");
+					builder.Append(c.ToString("x6"));
+					builder.Append('>');
+					currentColour = c;
+				}
+				if (bold != currentBold) {
+					if (bold) {
+						builder.Append("<bold>");
+					}
+					else {
+						builder.Append("</bold>");
+					}
+					currentBold = bold;
+				}
+				builder.Append(text[j]);
+			}
+		}
+		if (CurrentSession.EchoInput()) {
+			builder.Append(CurrentSession.InputBuffer);
+		}
+		if (currentBold) {
+			builder.Append("</bold>");
+				}
+		builder.Append("</color>");
+		return builder.ToString();
+	}
     void OnGUI() {
-        string text = "<color=white>";
+        
         if (Event.current.isKey) {
             CurrentSession.KeyboardEvent(Event.current);
             if (Event.current.type == EventType.KeyDown) {
@@ -308,17 +406,8 @@ public class Terminal : MonoBehaviour {
             }
         }
         int max = Mathf.Min(Buffer.Count, Height + ScrollY);
-        //int max = Mathf.Min(0, Height);
-        for (int i = ScrollY; i < max; i++) {
-            if (i > ScrollY) {
-                text += "\n";
-            }
-            text += new string(Buffer[i]);
-        }
-        if (CurrentSession.EchoInput()) {
-            text += CurrentSession.InputBuffer;
-        }
-        text += "</color>";
+		string text = GetGUIString(max);
+
         GUI.Label(new Rect(0, 0, Screen.width, Screen.height), text, style);
 	}
 
