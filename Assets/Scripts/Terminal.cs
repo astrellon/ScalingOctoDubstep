@@ -8,6 +8,7 @@ public class Terminal : MonoBehaviour {
 
 	public struct BufferProperty {
 		public int Colour;
+        public byte ColourAttr;
 		public bool Bold;
 	}
 	public NixSystem System {get; set;}
@@ -306,22 +307,31 @@ public class Terminal : MonoBehaviour {
 								}
 								count = GetCommandNumber(i, ref attr);
 								i += count;
-								Debug.Log ("ATTR: " + attr);
 
 								if (attr == 0) {
 									CurrentProperty.Bold = false;
 									CurrentProperty.Colour = Colours["xterm"][7];
+                                    CurrentProperty.ColourAttr = 37;
 								}
 								else if (attr == 1) {
 									CurrentProperty.Bold = true;
+                                    if (CurrentProperty.ColourAttr >= 30 && CurrentProperty.ColourAttr <= 37) {
+                                        int index = CurrentProperty.ColourAttr - 30 + 8;
+                                        CurrentProperty.Colour = Colours["xterm"][index];
+                                    }
 								}
 								else if (attr == 2) {
 									CurrentProperty.Bold = false;
-								}
+                                    if (CurrentProperty.ColourAttr >= 30 && CurrentProperty.ColourAttr <= 37) {
+                                        int index = CurrentProperty.ColourAttr - 30;
+                                        CurrentProperty.Colour = Colours["xterm"][index];
+                                    }
+                                }
 								else if (attr >= 30 && attr <= 37) {
-									int bolden = CurrentProperty.Bold ? 10 : 0;
+									int bolden = CurrentProperty.Bold ? 8 : 0;
 									int index = attr - 30 + bolden;
 									CurrentProperty.Colour = Colours["xterm"][index];
+                                    CurrentProperty.ColourAttr = (byte)attr;
 								}
 							}
 						}
@@ -338,6 +348,13 @@ public class Terminal : MonoBehaviour {
                 }
             }
         }
+    }
+    public string StringCommandSequence() {
+        string result = "";
+        for (int i = 0; i < CommandSequence.Count; i++) {
+            result += (char)CommandSequence[i];
+        }
+        return result;
     }
 	public void Write(string data) {
 		for (int i = 0; i < data.Length; i++) {
@@ -371,24 +388,23 @@ public class Terminal : MonoBehaviour {
 					builder.Append('>');
 					currentColour = c;
 				}
+                /*
 				if (bold != currentBold) {
 					if (bold) {
-						builder.Append("<bold>");
+						builder.Append("<b>");
 					}
 					else {
-						builder.Append("</bold>");
+						builder.Append("</b>");
 					}
 					currentBold = bold;
 				}
+                */
 				builder.Append(text[j]);
 			}
 		}
 		if (CurrentSession.EchoInput()) {
 			builder.Append(CurrentSession.InputBuffer);
 		}
-		if (currentBold) {
-			builder.Append("</bold>");
-				}
 		builder.Append("</color>");
 		return builder.ToString();
 	}

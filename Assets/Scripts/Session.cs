@@ -28,10 +28,11 @@ public class Session {
         WorkingDirectory.Absolute = true;
         ActiveStack = new Stack<Program>();
         EnvironmentVariables = new Dictionary<string, string>();
-        EnvironmentVariables["HOSTNAME"] = "Unknown host";
-        EnvironmentVariables["USER"] = "Alan";
+        EnvironmentVariables["HOSTNAME"] = "unknown_host";
+        EnvironmentVariables["USER"] = "alan";
         EnvironmentVariables["HOSTTYPE"] = "magic";
 		EnvironmentVariables["PWD"] = WorkingDirectory.ToString();
+        EnvironmentVariables["PS1"] = @"\[\033[1;32m\]$USER@$HOSTNAME\[\033[0m\]:\[\033[1;34m\]$PWD\[\033[0m\]- ";
     }
 
 	public void SetWorkingDirectory(NixPath path) {

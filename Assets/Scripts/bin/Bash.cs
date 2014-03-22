@@ -37,19 +37,28 @@ public class Bash : Program {
 		}
 		return result;
     }
+    public string ParsePS1(string input) {
+        string parsed = Parse(input);
+        
+        string result = "";
+        Regex r = new Regex(@"(\\\[\\033([^\\\]]+)\\\])|([^\\\[]+)");
+        foreach (Match m in r.Matches(parsed)) {
+            if (m.Value.IndexOf(@"\[\033") == 0) {
+                result += "\x1b";
+                result += m.Groups[2];
+            }
+            else {
+                result += m.Value;
+            }
+        }
+        
+        return result;
+    }
     public void BeginInput() {
-        //StdOut.Write(MainSession.WorkingDirectory.ToString());
-		StdOut.Write(0x1b);
-		StdOut.Write ("[0;32m");
-		string parsed = Parse ("$USER@$HOSTNAME:$PWD$");
-		StdOut.Write (parsed);
-		StdOut.Write(0x1b);
-		StdOut.Write ("[0m");
-        StdOut.Write("> ");
-        StdOut.Write(0x1b);
-        StdOut.Write("[s");
-		StdOut.Write(0x1b);
-		StdOut.Write("[37;m");
+        string result = ParsePS1(MainSession.GetEnvValue("PS1"));
+        StdOut.Write(result);
+        // Important!
+        StdOut.Write("\x1b[s");
     }
     protected string AutocompleteInput(string input, int cursor) {
         string result = "";
