@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.IO;
+using NLua;
 
 public class NixSystem : MonoBehaviour {
 
@@ -13,6 +14,7 @@ public class NixSystem : MonoBehaviour {
 	public FileSystem RootDrive {get; set;}
     public Dictionary<int, Program> ActivePrograms {get; private set;}
     public int PidCounter {get; protected set;}
+	public Lua.LuaOptions BaseLuaOptions {get; protected set;}
 
     public int NewPid() {
         return ++PidCounter;
@@ -33,6 +35,7 @@ public class NixSystem : MonoBehaviour {
 		AddProgram("cd", typeof(Cd));
 		AddProgram("ls", typeof(Ls));
 		AddProgram("clear", typeof(Clear));
+		AddProgram("lua", typeof(RunLua));
 
         BaseSession = new Session();
         Shell = new Bash(NewPid());
@@ -43,6 +46,26 @@ public class NixSystem : MonoBehaviour {
     	    term.Shell = Shell;
             term.CurrentSession = BaseSession;
 		}
+/*
+		BaseLuaOptions = new Lua.LuaOptions();
+		BaseLuaOptions.StdOut = Shell.StdOut;
+		BaseLuaOptions.StdIn = Shell.StdIn;
+		BaseLuaOptions.StdErr = Shell.StdErr;
+		BaseLuaOptions.RootFolder = RootDrive.RootFolder;
+*/
+		/*
+		Lua l = new Lua();
+		Lua.LuaOptions opts = new Lua.LuaOptions();
+		opts.StdOut = Shell.StdOut.InternalStream;
+		opts.RootFolder = @"C:\git\ScalingOctoDubstep\root\";
+		l.SetOptions(opts);
+		l.DoString(@"f = io.open('test.out', 'r')
+                print(f:read('*all'))
+				print('\n')
+                a='hello'");
+		string a = l.GetString("a");
+		Debug.Log("A: " + a);
+		*/
 
 		BeginBoot();
 	}

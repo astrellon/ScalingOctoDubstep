@@ -1,97 +1,138 @@
 using System;
 using System.IO;
 using System.Threading;
-using UnityEngine;
 
-public class NixStream : INixStream {
-
-    public Stream InternalStream {get; set;}
-    public bool EchoStream {get; set;}
-
-    public NixStream(Stream baseStream) {
-        EchoStream = true;
-        InternalStream = baseStream;
-        Enabled = true;
-    }
-
-    public bool Enabled {get; set;}
-
-    public int Length() {
-        return (int)InternalStream.Length;
-    }
-    public int Read(byte []dest, int offset = 0, int maxRead = -1) {
-        if (maxRead < 0) {
-            maxRead = dest.Length;
-        }
-
-        int result = 0;
-        lock (InternalStream) {
-			while (InternalStream.Length == 0) {
-				Monitor.Wait(InternalStream);
+public class NixStream : MemoryStream
+{
+	public bool Enabled { get; set; }
+	public bool EchoStream { get; set; }
+	private int _ReadPosition = 0;
+	public object _Lock = new object();
+	
+	public int ReadPosition
+	{
+		get
+		{
+			return _ReadPosition;
+		}
+	}
+	public void SetReadPosition(int value, int oldPos = -1)
+	{
+		_ReadPosition += value;
+		if (_ReadPosition == Position)
+		{
+			Position = 0;
+			_ReadPosition = 0;
+			SetLength(0);
+		}
+		else if (oldPos >= 0)
+		{
+			Position = oldPos;
+		}
+	}
+	
+	public NixStream()
+	{
+		Enabled = true;
+		EchoStream = true;
+	}
+	
+	public int Remaining
+	{
+		get
+		{
+			return (int)(Length - Position);
+		}
+	}
+	public int Read(byte[] buffer)
+	{
+		return Read(buffer, 0, buffer.Length);
+	}
+	public override int ReadByte()
+	{
+		int result = -1;
+		lock (_Lock)
+		{
+			while (ReadPosition - Length == 0)
+			{
+				Monitor.Wait(_Lock);
 			}
-            InternalStream.Seek(0, SeekOrigin.Begin);
-            result = InternalStream.Read(dest, offset, maxRead);
-            InternalStream.SetLength(0);
-        }
-        string read = System.Text.Encoding.Default.GetString(dest, 0, maxRead);
-        return result;
-    }
-    public int Read(ref string dest, int maxRead = -1) {
-		byte []buffer;
-        int result = 0;
-		lock (InternalStream) {
-			while (InternalStream.Length == 0) {
-				Monitor.Wait(InternalStream);
-				if (maxRead < 0) {
-					maxRead = Length(); 
-				}
+			result = base.ReadByte();
+			if (result != -1)
+			{
+				SetReadPosition(_ReadPosition + 1);
 			}
+		}
+		return result;
+	}
+	public override int Read(byte[] buffer, int offset, int count)
+	{
+		int result = 0;
+		lock (_Lock)
+		{
+			while (ReadPosition - Length == 0)
+			{
+				Monitor.Wait(_Lock);
+			}
+			int oldPos = (int)Position;
+			Position = _ReadPosition;
+			result = base.Read(buffer, offset, count);
+			SetReadPosition(_ReadPosition + result, oldPos);
+		}
+		return result;
+	}
+	public int Read(ref string dest, int maxRead = -1)
+	{
+		byte[] buffer;
+		int result = 0;
+		
+		lock (_Lock)
+		{
+			while (Length == 0)
+			{
+				Monitor.Wait(_Lock);
+			}
+			if (maxRead < 0)
+			{
+				maxRead = (int)(Length - ReadPosition);
+			}
+			int oldPos = (int)Position;
+			Position = ReadPosition;
 			buffer = new byte[maxRead];
-            InternalStream.Seek(0, SeekOrigin.Begin);
-            result = InternalStream.Read(buffer, 0, maxRead);
-            InternalStream.SetLength(0);
-        }
-        if (result > 0) {
-            dest = System.Text.Encoding.Default.GetString(buffer, 0, maxRead);
-        }
-
-        return result;
-    }
-
-    public void Write(byte []buffer, int offset = 0, int count = -1) {
-        if (!Enabled || buffer == null || buffer.Length == 0) {
-            return;
-        }
-
-        if (count < 0) {
-            count = buffer.Length;
-        }
-		lock (InternalStream) {
-            InternalStream.Write(buffer, offset, count);
-			Monitor.PulseAll(InternalStream);
-        }
-    } 
-    public void Write(byte data) { 
-        if (!Enabled) {
-            return;
-        }
-		lock (InternalStream) {
-            InternalStream.Write(new byte[]{data}, 0, 1);
-			Monitor.PulseAll(InternalStream);
-        }
-    } 
-    public void Write(string buffer) {
-        if (!Enabled || buffer == null || buffer.Length == 0) {
-            return;
-        }
-        byte[] bytes = new byte[buffer.Length];
-        for (int i = 0; i < buffer.Length; i++) {
-            bytes[i] = (byte)buffer[i];
-        }
-		lock (InternalStream) {
-            InternalStream.Write(bytes, 0, bytes.Length);
-			Monitor.PulseAll(InternalStream);
-        }
-    }
+			result = base.Read(buffer, 0, maxRead);
+			SetReadPosition(_ReadPosition + result, oldPos);
+			//ReadPosition += result;
+			
+		}
+		dest = System.Text.Encoding.UTF8.GetString(buffer);
+		
+		return result;
+	}
+	
+	public void Write(byte data)
+	{
+		if (!Enabled)
+		{
+			return;
+		}
+		lock (_Lock)
+		{
+			this.Write(new byte[] { data }, 0, 1);
+			Monitor.PulseAll(_Lock);
+		}
+	}
+	public void Write(string input)
+	{
+		if (!Enabled || input == null || input.Length == 0)
+		{
+			return;
+		}
+		byte[] bytes = System.Text.Encoding.UTF8.GetBytes(input);
+		
+		lock (_Lock)
+		{
+			Write(bytes, 0, bytes.Length);
+			Monitor.PulseAll(_Lock);
+		}
+	}	
 }
-

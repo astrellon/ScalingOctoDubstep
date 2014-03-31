@@ -380,6 +380,9 @@ public class Terminal : MonoBehaviour {
 			char []text = Buffer[i];
 			BufferProperty []props = BufferProperties[i];
 			for (int j = 0; j < text.Length; j++) {
+				if (text[j] == '\0') {
+					continue;
+				}
 				bool bold = props[j].Bold;
 				int c = props[j].Colour & 0xffffff;
 				if (c != currentColour) {
@@ -409,7 +412,7 @@ public class Terminal : MonoBehaviour {
 		return builder.ToString();
 	}
     void OnGUI() {
-        
+
         if (Event.current.isKey) {
             CurrentSession.KeyboardEvent(Event.current);
             if (Event.current.type == EventType.KeyDown) {
@@ -444,8 +447,8 @@ public class Terminal : MonoBehaviour {
 	void Update () {
         
         if (Shell != null) {
-            if (Shell.StdOut.Length() > 0) {
-                byte []data = new byte[Shell.StdOut.Length()];
+			if (Shell.StdOut.Length - Shell.StdOut.ReadPosition > 0) {
+				byte []data = new byte[Shell.StdOut.Length - Shell.StdOut.ReadPosition];
                 Shell.StdOut.Read(data);
                 Write(data);
             }

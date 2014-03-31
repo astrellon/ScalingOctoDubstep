@@ -44,15 +44,15 @@ public abstract class Program {
         Events = new Queue<ProgramEvent>();
 
         if (stdout == null) {
-            stdout = new NixStream(new MemoryStream());
+            stdout = new NixStream();
         }
         StdOut = stdout;
         if (stdin == null) {
-            stdin = new NixStream(new MemoryStream());
+            stdin = new NixStream();
         }
         StdIn = stdin;
         if (stderr == null) {
-            stderr = new NixStream(new MemoryStream());
+            stderr = new NixStream();
         }
         StdErr = stderr;
         MainThread = new System.Threading.Thread(Run);
