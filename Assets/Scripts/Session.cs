@@ -67,11 +67,11 @@ public class Session {
     public void KeyboardEvent(Event e) {
         if (e.type == EventType.KeyDown) {
             if (e.character == '\r' || e.character == '\n') {
-				string temp = InputBuffer;
+				string temp = InputBuffer + e.character;
 				InputBuffer = "";
                 if (ForegroundProgram != null) {
 					if (EchoInput()) {
-						ForegroundProgram.StdOut.Write(temp + e.character);
+						ForegroundProgram.StdOut.Write(temp);
 					}
 					ForegroundProgram.StdIn.Write(temp);
                 }

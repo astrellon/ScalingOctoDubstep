@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections;
 using NLua;
 
@@ -10,22 +11,39 @@ public class RunLua : Program {
 	public override string GetCommand() {
 		return "lua";
 	}
+	public int ExecuteHandler(string line) {
+		MainSystem.Execute(MainSession, line);
+		return 0;
+	}
 	protected override void Run() {
 		/*StdOut.Write("Enter your name: ");
 		string name = "";
 		StdIn.Read (ref name);
 		StdOut.Write ("Welcome " + name);*/
-		Lua l = new Lua();
+
 		Lua.LuaOptions opts = new Lua.LuaOptions();
-		opts.StdOut = MainSession.Shell.StdOut;
-		opts.StdIn = MainSession.Shell.StdIn;
+		opts.StdOut = StdOut;
+		opts.StdIn = StdIn;
+		//string input = "";
+		//MainSystem.Shell.StdIn.Read (ref input);
 		opts.StdErr = MainSession.Shell.StdErr;
 		opts.RootFolder = MainSystem.RootDrive.RootFolder;
-		l.SetOptions(opts);
+		opts.ExecuteHandler = ExecuteHandler;
+		Lua l = new Lua(opts);
 
-		l.DoString(@"print('hello\n')
-			s = io.read('*l')
-			print('how are you? '..s)
-		");
+		try
+		{
+			l.DoString(@"
+				print('hello: ')
+				s = io.read('*l')
+				print('how are you? '..s..'\nAnd how old are you? ')
+				s = io.read('*l')
+				print('A whole '..s..' eh\n')
+			");
+		}
+		catch (Exception exp)
+		{
+			MainSession.Shell.StdOut.Write ("Exception executing Lua: " + exp.Message + "\n");
+		}
 	}
 }

@@ -447,8 +447,8 @@ public class Terminal : MonoBehaviour {
 	void Update () {
         
         if (Shell != null) {
-			if (Shell.StdOut.Length - Shell.StdOut.ReadPosition > 0) {
-				byte []data = new byte[Shell.StdOut.Length - Shell.StdOut.ReadPosition];
+			if (Shell.StdOut.Length - Shell.StdOut.Position > 0) {
+				byte []data = new byte[Shell.StdOut.Length - Shell.StdOut.Position];
                 Shell.StdOut.Read(data);
                 Write(data);
             }

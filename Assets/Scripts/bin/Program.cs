@@ -26,9 +26,9 @@ public abstract class Program {
         }
     }
 
-    public NixStream StdOut {get; set;}
-    public NixStream StdIn {get; set;}
-    public NixStream StdErr {get; set;}
+	public NixStream StdOut {get; set;}
+	public NixStream StdIn {get; set;}
+	public NixStream StdErr {get; set;}
     public Thread MainThread {get; set;}
     public int Pid {get; private set;}
     public bool Running {get; protected set;}
@@ -38,21 +38,21 @@ public abstract class Program {
     public int Result {get; protected set;}
     public Queue<ProgramEvent> Events {get; private set;}
 
-    public Program(int pid, NixStream stdout = null, NixStream stdin = null, NixStream stderr = null) {
+	public Program(int pid, NixStream stdout = null, NixStream stdin = null, NixStream stderr = null) {
 		Running = false;
         Pid = pid;
         Events = new Queue<ProgramEvent>();
 
         if (stdout == null) {
-            stdout = new NixStream();
+			stdout = new NixStream();
         }
         StdOut = stdout;
         if (stdin == null) {
-            stdin = new NixStream();
+			stdin = new NixStream();
         }
         StdIn = stdin;
         if (stderr == null) {
-            stderr = new NixStream();
+			stderr = new NixStream();
         }
         StdErr = stderr;
         MainThread = new System.Threading.Thread(Run);

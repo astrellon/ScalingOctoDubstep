@@ -1,9 +1,19 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System;
+using System.Threading;
 using NLua;
 
 public class Test : MonoBehaviour {
 
+	public int ExecuteHandler(string line) {
+		Debug.Log ("Execute line: " + line);
+		return 0;
+	}
+
+	public string InputBuffer;
+
+	public NixStream StdIn;
 	// Use this for initialization
 	void Start () {
 		/*
@@ -33,6 +43,42 @@ public class Test : MonoBehaviour {
 		Debug.Log(came_from_script);
 		  */
 
+		InputBuffer = "";
+		Lua.LuaOptions opts = new Lua.LuaOptions();
+		opts.ExecuteHandler = ExecuteHandler;
+		StdIn = new NixStream();
+		opts.StdIn = StdIn;
+		//stdin.Write ("Melli\n");
+
+		/*Thread t = new Thread(() =>
+		                      {
+			Thread.Sleep(2000);
+			//Console.WriteLine("Waiting for use input: ");
+			//string input = Console.ReadLine();
+			//stdin.Write(input + "\n");
+			stdin.Write("Melli\n");
+		});
+		t.Start();*/
+
+		Thread t2 = new Thread(() =>
+		{
+			Lua l = new Lua(opts);
+			l.DoString(@"os.execute('hello: ')
+				s = io.read('*l')
+				os.execute('how are you? '..s)");
+		});
+		t2.Start();
+	}
+
+	void OnGUI() {
+		if (Event.current.isKey) {
+			if (Event.current.character != '\0') {
+				InputBuffer += Event.current.character;
+				if (Event.current.character == '\n') {
+					StdIn.Write (InputBuffer);
+				}
+			}
+		}
 	}
 	
 	// Update is called once per frame
