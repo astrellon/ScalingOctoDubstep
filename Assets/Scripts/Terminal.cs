@@ -12,9 +12,9 @@ public class Terminal : MonoBehaviour {
 		public bool Bold;
 	}
 	public NixSystem System {get; set;}
-	public int Width {get; set;}
-	public int Height {get; set;}
-    public int MaxHeight {get; set;}
+	public int Width = 80;
+	public int Height = 16;
+	public int MaxHeight = 20;
 	public List<char[]> Buffer {get; private set;}
 	public List<BufferProperty[]> BufferProperties { get; private set; }
 	public int CursorX {get; set;}
@@ -27,14 +27,14 @@ public class Terminal : MonoBehaviour {
     protected List<byte> CommandSequence = null;
     public int ScrollX {get; set;}
     public int ScrollY {get; set;}
+	public bool DisplayOntoGui = true;
 
 	private BufferProperty CurrentProperty;
 	public Dictionary<string, int[]> Colours { get; private set; }
 
     protected GUIStyle style;
+    private TextMesh textMesh;
 
-	public Terminal(int width = 80, int height = 25) {
-	}
     public void Start() {
 		Width = 80;
 		Height = 16;
@@ -55,6 +55,8 @@ public class Terminal : MonoBehaviour {
         style = new GUIStyle();
         style.fontSize = 11;
         style.font = f;
+
+        textMesh = (TextMesh)GetComponent<TextMesh>();
 
 		UpdateBufferSize();
     }
@@ -424,10 +426,14 @@ public class Terminal : MonoBehaviour {
                 }
             }
         }
-        int max = Mathf.Min(Buffer.Count, Height + ScrollY);
+		int max = Mathf.Min(Buffer.Count, Height + ScrollY);
 		string text = GetGUIString(max);
-
-        GUI.Label(new Rect(0, 0, Screen.width, Screen.height), text, style);
+        if (DisplayOntoGui) {
+            GUI.Label(new Rect(0, 0, Screen.width, Screen.height), text, style);
+        }
+        else if (textMesh != null) {
+            textMesh.text = text;
+        }
 	}
 
 	void AddToBuffer(string input) {
