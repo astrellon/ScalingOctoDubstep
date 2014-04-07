@@ -22,10 +22,11 @@ public class FileSystem {
 		return result;
 	}
 	public string GetPathTo(string relative) {
-        if (relative[0] != '/' || relative[0] != '\\') {
-            return RootFolder + '/' + relative;
-        }
-		return RootFolder + relative;
+		NixPath path = new NixPath(relative);
+		if (path.Absolute) {
+			return RootFolder + path.ToString();
+		}
+		return RootFolder + "/" + path.ToString();
 	}
 	public bool IsDirectory(string path) {
 		string tpath = GetPathTo(path);

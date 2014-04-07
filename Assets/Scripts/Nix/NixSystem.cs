@@ -103,25 +103,28 @@ public class NixSystem : MonoBehaviour {
 			}
 		}
 
+		Program prog = null;
 		if (BinPrograms.ContainsKey(binName)) {
             Debug.Log("Attempting to create program: " + binName);
-            Program prog = (Program)Activator.CreateInstance(BinPrograms[binName], NewPid());
-            
-            if (prog != null) {
-                prog.StdOut = Shell.StdOut;
-                session.PushForegroundProgram(prog);
-                Debug.Log("Attempting to run program: " + binName);
-                prog.Execute(this, session, args);
-                session.PopForegroundProgram();
-                Debug.Log("Fin " + binName);
-            }
-            else {
-                Shell.StdOut.Write("Unable to create " + binName + " program.\n");
-            }
+            prog = (Program)Activator.CreateInstance(BinPrograms[binName], NewPid());
+			if (prog == null) {
+				Shell.StdOut.Write("Unable to create " + binName + " program.\n");
+			}
 		}
 		else {
+			prog = new RunLua(NewPid ());
+		}
+		if (prog == null) {
 			Shell.StdOut.Write("Unable to find command: " + binName);
 			Shell.StdOut.Write("\n");
+		}
+		else {
+			prog.StdOut = Shell.StdOut;
+			session.PushForegroundProgram(prog);
+			Debug.Log("Attempting to run program: " + binName);
+			prog.Execute(this, session, args);
+			session.PopForegroundProgram();
+			Debug.Log("Fin " + binName);
 		}
 	}
 }

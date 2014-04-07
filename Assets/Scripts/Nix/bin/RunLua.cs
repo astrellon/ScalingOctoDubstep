@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System;
+using System.IO;
 using System.Collections;
 using NLua;
 
@@ -16,30 +17,38 @@ public class RunLua : Program {
 		return 0;
 	}
 	protected override void Run() {
-		/*StdOut.Write("Enter your name: ");
-		string name = "";
-		StdIn.Read (ref name);
-		StdOut.Write ("Welcome " + name);*/
-
 		Lua.LuaOptions opts = new Lua.LuaOptions();
 		opts.StdOut = StdOut;
 		opts.StdIn = StdIn;
-		//string input = "";
-		//MainSystem.Shell.StdIn.Read (ref input);
-		opts.StdErr = MainSession.Shell.StdErr;
-		opts.RootFolder = MainSystem.RootDrive.RootFolder;
+		opts.StdErr = StdErr;
+		opts.RootFolder = MainSystem.RootDrive.RootFolder + "\\";
 		opts.ExecuteHandler = ExecuteHandler;
 		Lua l = new Lua(opts);
-
+		l.SetWorkingDirectory(MainSession.WorkingDirectory.ToString());
 		try
 		{
-			l.DoString(@"
-				print('hello: ')
-				s = io.read('*l')
-				print('how are you? '..s..'\nAnd how old are you? ')
-				s = io.read('*l')
-				print('A whole '..s..' eh\n')
-			");
+			if (Argv.Length > 0) {
+				//string file = MainSystem.RootDrive.GetPathTo(Argv[0]);
+                NixPath newPath = MainSession.WorkingDirectory.Combine(Argv[0]);
+                string file = MainSystem.RootDrive.GetPathTo(newPath.ToString());
+				Debug.Log ("File to load: " + file);
+				if (File.Exists(file)) {
+					string argStr = @"arg={}";
+					//argStr += "arg[0]=\"" + Argv[0] + "\"\n";
+					for (int i = 0; i < Argv.Length; i++) {
+						argStr += "arg[" + i + "]=\"" + Argv[i] + "\"\n";
+					}
+					l.DoString(argStr);
+					//NixPath newPath = MainSession.WorkingDirectory.Combine(Argv[0]);
+					l.DoFile(newPath.ToString());
+				}
+				else {
+					MainSession.Shell.StdOut.Write ("Unable to find file: " + Argv[0] + "\n");
+				}
+			}
+			else {
+				// Do stdin stuff
+			}
 		}
 		catch (Exception exp)
 		{
