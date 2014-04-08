@@ -15,7 +15,6 @@ public class Pwd : Program {
 		if (MainSession != null && MainSession.WorkingDirectory != null) {
 			pwd = MainSession.WorkingDirectory.ToString();
         }
-        Debug.Log("PWD: " + pwd);
 		StdOut.Write(pwd);
 		StdOut.Write("\n");
 	}

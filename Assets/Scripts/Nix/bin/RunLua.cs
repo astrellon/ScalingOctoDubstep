@@ -6,8 +6,12 @@ using NLua;
 
 public class RunLua : Program {
 
+	private string PathToLua = "";
 	public RunLua(int pid) : base(pid) {
 		
+	}
+	public RunLua(int pid, string pathToLua) : base(pid) {
+		PathToLua = pathToLua;
 	}
 	public override string GetCommand() {
 		return "lua";
@@ -27,9 +31,15 @@ public class RunLua : Program {
 		l.SetWorkingDirectory(MainSession.WorkingDirectory.ToString());
 		try
 		{
-			if (Argv.Length > 0) {
+			if (Argv.Length > 1 || PathToLua.Length > 0) {
 				//string file = MainSystem.RootDrive.GetPathTo(Argv[0]);
-                NixPath newPath = MainSession.WorkingDirectory.Combine(Argv[0]);
+				NixPath newPath;
+				if (PathToLua.Length > 0) {
+					newPath = new NixPath(PathToLua);
+				}
+				else {
+                	newPath = MainSession.WorkingDirectory.Combine(Argv[1]);
+				}
                 string file = MainSystem.RootDrive.GetPathTo(newPath.ToString());
 				Debug.Log ("File to load: " + file);
 				if (File.Exists(file)) {
@@ -39,7 +49,6 @@ public class RunLua : Program {
 						argStr += "arg[" + i + "]=\"" + Argv[i] + "\"\n";
 					}
 					l.DoString(argStr);
-					//NixPath newPath = MainSession.WorkingDirectory.Combine(Argv[0]);
 					l.DoFile(newPath.ToString());
 				}
 				else {

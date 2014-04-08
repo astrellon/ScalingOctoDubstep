@@ -12,8 +12,8 @@ public class Ls : Program {
 	}
     protected override void Run() {
 		NixPath newPath = MainSession.WorkingDirectory;
-		if (Argv.Length > 0) {
-			newPath = MainSession.WorkingDirectory.Combine(Argv[0]);
+		if (Argv.Length > 1) {
+			newPath = MainSession.WorkingDirectory.Combine(Argv[1]);
 		}
 
 		FileNode []files = MainSystem.RootDrive.ListFiles(newPath.ToString());

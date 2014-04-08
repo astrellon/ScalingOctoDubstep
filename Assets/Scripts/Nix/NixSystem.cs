@@ -86,22 +86,21 @@ public class NixSystem : MonoBehaviour {
 		Regex regex = new Regex("(\".*\")|([^ \\t\\n\\r]+)");
 
 		MatchCollection matches = regex.Matches(input);
-		string []args = new string[matches.Count - 1];
-		string binName = "";
+		string []args = new string[matches.Count];
+		//string binName = "";
 		int i = 0;
 		foreach (Match match in regex.Matches(input)) {
-			if (binName.Length == 0) {
+			/*if (binName.Length == 0) {
 				binName = match.Value;
+			}*/
+			if (match.Value[0] == '"') {
+				args[i++] = match.Value.Substring(1, match.Value.Length - 2);
 			}
 			else {
-				if (match.Value[0] == '"') {
-					args[i++] = match.Value.Substring(1, match.Value.Length - 2);
-				}
-				else {
-					args[i++] = match.Value;
-				}
+				args[i++] = match.Value;
 			}
 		}
+		string binName = args[0];
 
 		Program prog = null;
 		if (BinPrograms.ContainsKey(binName)) {
@@ -112,7 +111,10 @@ public class NixSystem : MonoBehaviour {
 			}
 		}
 		else {
-			prog = new RunLua(NewPid ());
+			NixPath binPath = new NixPath("/usr/bin/" + binName);
+			if (RootDrive.IsFile(binPath)) {
+				prog = new RunLua(NewPid(), "/usr/bin/" + binName);
+			}
 		}
 		if (prog == null) {
 			Shell.StdOut.Write("Unable to find command: " + binName);
@@ -122,6 +124,14 @@ public class NixSystem : MonoBehaviour {
 			prog.StdOut = Shell.StdOut;
 			session.PushForegroundProgram(prog);
 			Debug.Log("Attempting to run program: " + binName);
+			String argsStr = "";
+			for (int j = 0; j < args.Length; j++) {
+				if (j > 0) {
+					argsStr += ", ";
+				}
+				argsStr += args[j];
+			}
+			Debug.Log ("- With args: " + argsStr);
 			prog.Execute(this, session, args);
 			session.PopForegroundProgram();
 			Debug.Log("Fin " + binName);

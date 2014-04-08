@@ -11,12 +11,12 @@ public class Cd : Program {
 		return "cd";
 	}
 	protected override void Run() {
-		if (Argv.Length == 0) {
+		if (Argv.Length <= 1) {
 			StdOut.Write("Need help");
 			return;
 		}
 
-		NixPath newPath = MainSession.WorkingDirectory.Combine(Argv[0]);
+		NixPath newPath = MainSession.WorkingDirectory.Combine(Argv[1]);
 		if (MainSystem.RootDrive.IsDirectory(newPath.ToString())) {
 			MainSession.SetWorkingDirectory(newPath);
 		}
