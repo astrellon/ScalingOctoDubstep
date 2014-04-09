@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections;
 using System.IO;
 
@@ -52,4 +53,38 @@ public class FileSystem {
         string tpath = GetPathTo(path.ToString());
         return File.Exists(tpath) || Directory.Exists(tpath);
     }
+
+	public void Copy(NixPath fromPath, NixPath toPath) {
+		if (!IsFileOrDirectory(fromPath)) {
+			throw new System.IO.FileNotFoundException();
+		}
+		if (IsDirectory(toPath)) {
+			// Cannot copy to a directory.
+			throw new Exception("Cannot copy to a directory");
+		}
+		try {
+			File.Copy(GetPathTo(fromPath.ToString()), GetPathTo(toPath.ToString()));
+		}
+		catch (Exception exp) {
+			throw new Exception(exp.Message);
+		}
+	}
+
+	public void MakeDirectory(NixPath path, bool createParents) {
+        string pathStr = GetPathTo(path.ToString());
+        Debug.Log("Makedir str: " + pathStr);
+		if (createParents) {
+			Directory.CreateDirectory(pathStr);
+		}
+		else {
+			NixPath t = new NixPath(path.ToString());
+			t.PopPath();
+			if (IsDirectory(t)) {
+				Directory.CreateDirectory(pathStr);
+			}
+			else {
+				throw new DirectoryNotFoundException();
+			}
+		}
+	}
 }

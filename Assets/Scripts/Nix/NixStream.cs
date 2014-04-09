@@ -134,4 +134,8 @@ public class NixStream : MemoryStream
             Monitor.PulseAll(Lock);
         }
     }
+	public void WriteLine(string input)
+	{
+		Write (input + "\n");
+	}
 }

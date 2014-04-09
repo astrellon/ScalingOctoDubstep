@@ -33,10 +33,12 @@ public class NixSystem : MonoBehaviour {
 		AddProgram("echo", typeof(Echo));
 		AddProgram("pwd", typeof(Pwd));
 		AddProgram("cd", typeof(Cd));
+		AddProgram("cp", typeof(Cp));
 		AddProgram("ls", typeof(Ls));
 		AddProgram("clear", typeof(Clear));
 		AddProgram("lua", typeof(RunLua));
-
+		AddProgram("cat", typeof(Cat));
+		AddProgram("mkdir", typeof(Mkdir));
         BaseSession = new Session();
         Shell = new Bash(NewPid());
         BaseSession.Shell = Shell;
