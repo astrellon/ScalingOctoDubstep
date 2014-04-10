@@ -9,7 +9,7 @@ using NLua;
 public class NixSystem : MonoBehaviour {
 
     public Session BaseSession {get; set;}
-    public Program Shell {get; private set;}
+    public Bash Shell {get; private set;}
     public Dictionary<string, Type> BinPrograms {get; set;}
 	public FileSystem RootDrive {get; set;}
     public Dictionary<int, Program> ActivePrograms {get; private set;}
@@ -92,9 +92,6 @@ public class NixSystem : MonoBehaviour {
 		//string binName = "";
 		int i = 0;
 		foreach (Match match in regex.Matches(input)) {
-			/*if (binName.Length == 0) {
-				binName = match.Value;
-			}*/
 			if (match.Value[0] == '"') {
 				args[i++] = match.Value.Substring(1, match.Value.Length - 2);
 			}
@@ -102,6 +99,7 @@ public class NixSystem : MonoBehaviour {
 				args[i++] = match.Value;
 			}
 		}
+
 		string binName = args[0];
 
 		Program prog = null;

@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 
 public class Bash : Program {
-    
+
     public List<string> History {get; private set;}
     public int HistoryPosition {get; private set;}
     public string InputBuffer {get; private set;}
@@ -27,11 +27,11 @@ public class Bash : Program {
     }
     public List<string> Parse(string input) {
         List<string> result = new List<string>();
-		string curr = "";
-		foreach (Match m in Parser.Matches(input)) {
-			if (m.Value.Length == 0) {
-				continue;
-			}
+        string curr = "";
+        foreach (Match m in Parser.Matches(input)) {
+            if (m.Value.Length == 0) {
+                continue;
+            }
             char first = m.Value[0];
             if (first == '<' || first == '>' || first == '|') {
                 curr = curr.Trim();
@@ -43,37 +43,37 @@ public class Bash : Program {
             }
             else if (first == '$' && m.Value.Length > 1) {
                 curr += MainSession.GetEnvValue(m.Value.Substring(1));
-			}
-			else {
-				curr += m.Value;
-			}
-		}
+            }
+            else {
+                curr += m.Value;
+            }
+        }
         curr = curr.Trim();
         if (curr.Length > 0) {
             result.Add(curr);
         }
-		return result;
+        return result;
     }
     public string ParsePS1(string input) {
         List<string> parsed = Parse(input);
-        
+
         try {
-        if (parsed.Count == 0) {
-            return "";
-        }
-        string result = "";
-        Regex r = new Regex(@"(\\\[\\033([^\\\]]+)\\\])|([^\\\[]+)");
-        foreach (Match m in r.Matches(parsed[0])) {
-            if (m.Value.IndexOf(@"\[\033") == 0) {
-                result += "\x1b";
-                result += m.Groups[2];
+            if (parsed.Count == 0) {
+                return "";
             }
-            else {
-                result += m.Value;
+            string result = "";
+            Regex r = new Regex(@"(\\\[\\033([^\\\]]+)\\\])|([^\\\[]+)");
+            foreach (Match m in r.Matches(parsed[0])) {
+                if (m.Value.IndexOf(@"\[\033") == 0) {
+                    result += "\x1b";
+                    result += m.Groups[2];
+                }
+                else {
+                    result += m.Value;
+                }
             }
-        }
-        
-        return result;
+
+            return result;
         }
         catch (Exception exp) {
             Debug.Log("Exception: " + exp.Message);
@@ -184,8 +184,8 @@ public class Bash : Program {
         // but there are other entires that will still match it.
         NixPath full = MainSession.WorkingDirectory.Combine(input);
         if (full.IsRoot() || 
-            MainSystem.RootDrive.IsFile(full) ||
-            MainSystem.RootDrive.IsDirectory(full)) {
+                MainSystem.RootDrive.IsFile(full) ||
+                MainSystem.RootDrive.IsDirectory(full)) {
             return result;
         }
         int index = input.LastIndexOf('/');
@@ -204,7 +204,7 @@ public class Bash : Program {
                     FileInfo info = files[i].Info;
                     if (info.Name.IndexOf(filename) == 0) {
                         string entry = info.Name;
-                        
+
                         if (baseinput.Length > 0) {
                             entry = baseinput + "/" + entry;
                         }
@@ -220,6 +220,45 @@ public class Bash : Program {
         }
         return result;
     }
+    public void Execute(string input) {
+        List<string> result = Parse(input);
+        if (result.Count == 1) {
+            MainSystem.Execute(MainSession, result[0]);
+        }
+        else if (result.Count > 1) {
+            string args = "";
+            string operand = null;
+            string args2 = "";
+            args = result[0];
+            if (result.Count >= 3) {
+                operand = result[1];
+                args2 = result[2];
+            }
+
+            if (args2.Length == 0) {
+                MainSystem.Execute(MainSession, args);
+            }
+            else {
+                if (operand == ">" || operand == "<") {
+                    NixPath filePath = new NixPath(args2);
+                    string path = MainSystem.RootDrive.GetPathTo(MainSession.WorkingDirectory.Combine(filePath).ToString());
+                    using (FileStream fstream = File.Open(path, FileMode.Create)) {
+                        if (operand == ">") {
+                            MainSystem.Execute(MainSession, args, fstream);
+                        }
+                        else if (operand == "<") {
+                            MainSystem.Execute(MainSession, args, null, fstream);
+                        }
+                    }
+                }
+                else if (operand == "|") {
+                    NixStream tmp = new NixStream();
+                    MainSystem.Execute(MainSession, args, tmp);
+                    MainSystem.Execute(MainSession, args2, null, tmp);
+                }
+            }
+        }
+    }
     protected void ProcessKeyboardEvent(Program.KeyboardEvent keyEvent) {
         char c = keyEvent.Character;
         if (c != '\0') {
@@ -230,19 +269,7 @@ public class Bash : Program {
                     History.Add(InputBuffer);
                 }
                 HistoryPosition = History.Count;
-                List<string> result = Parse(InputBuffer);
-                if (result.Count == 1) {
-				    MainSystem.Execute(MainSession, result[0]);
-                }
-                else {
-                    if (result.Count == 3) {
-                        if (result[1] == ">") {
-                            NixPath filePath = new NixPath(result[2]);
-                            FileStream output = File.Open(MainSystem.RootDrive.GetPathTo(filePath.ToString()), FileMode.Create);
-                            MainSystem.Execute(MainSession, result[0], output);
-                        }
-                    }
-                }
+                Execute(InputBuffer);
                 BeginInput();
                 InputBuffer = "";
             }

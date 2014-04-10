@@ -11,7 +11,7 @@ public class Cp : Program {
 		return "cp";
 	}
 	protected override void Run() {
-		if (Argv.Length <= 2) {
+		if (Argv.Count <= 2) {
 			StdOut.WriteLine("Need help");
 			return;
 		}

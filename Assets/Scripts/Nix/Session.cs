@@ -9,8 +9,8 @@ public class Session {
     public Program ForegroundProgram {get; set;}
     public Dictionary<string, string> EnvironmentVariables {get; set;}
 
-    private Program _Shell;
-    public Program Shell {
+    private Bash _Shell;
+    public Bash Shell {
         get {
             return _Shell;
         }

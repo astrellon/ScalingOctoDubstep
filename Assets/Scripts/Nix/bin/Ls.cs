@@ -12,7 +12,7 @@ public class Ls : Program {
 	}
     protected override void Run() {
 		NixPath newPath = MainSession.WorkingDirectory;
-		if (Argv.Length > 1) {
+		if (Argv.Count > 1) {
 			newPath = MainSession.WorkingDirectory.Combine(Argv[1]);
 		}
 

@@ -11,11 +11,11 @@ public class Cat : Program {
 		return "cat";
 	}
 	protected override void Run() {
-		if (Argv.Length == 1) {
+		if (Argv.Count == 1) {
 			// Read from stdin
 		}
 		else {
-			for (int i = 1; i < Argv.Length; i++) {
+			for (int i = 1; i < Argv.Count; i++) {
 				NixPath path = MainSession.WorkingDirectory.Combine(Argv[i]);
 				if (MainSystem.RootDrive.IsFileOrDirectory(path)) {
 					FileStream file = File.OpenRead(MainSystem.RootDrive.GetPathTo(path.ToString()));

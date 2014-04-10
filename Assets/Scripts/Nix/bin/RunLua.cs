@@ -17,7 +17,7 @@ public class RunLua : Program {
 		return "lua";
 	}
 	public int ExecuteHandler(string line) {
-		MainSystem.Execute(MainSession, line);
+		MainSession.Shell.Execute(line);
 		return 0;
 	}
 	protected override void Run() {
@@ -31,7 +31,7 @@ public class RunLua : Program {
 		l.SetWorkingDirectory(MainSession.WorkingDirectory.ToString());
 		try
 		{
-			if (Argv.Length > 1 || PathToLua.Length > 0) {
+			if (Argv.Count > 1 || PathToLua.Length > 0) {
 				//string file = MainSystem.RootDrive.GetPathTo(Argv[0]);
 				NixPath newPath;
 				if (PathToLua.Length > 0) {
@@ -45,7 +45,7 @@ public class RunLua : Program {
 				if (File.Exists(file)) {
 					string argStr = @"arg={}";
 					//argStr += "arg[0]=\"" + Argv[0] + "\"\n";
-					for (int i = 0; i < Argv.Length; i++) {
+					for (int i = 0; i < Argv.Count; i++) {
 						argStr += "arg[" + i + "]=\"" + Argv[i] + "\"\n";
 					}
 					l.DoString(argStr);

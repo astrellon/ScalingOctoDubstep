@@ -12,15 +12,15 @@ public class Mkdir : Program {
 		return "mkdir";
 	}
 	protected override void Run() {
-		if (Argv.Length == 1) {
+		if (Argv.Count == 1) {
 			// Read from stdin
 			StdOut.WriteLine(GetCommand() + ": missing operand");
 		}
 		else {
 			bool createParents = false;
-			string []copy = new string[Argv.Length - 1];
+			string []copy = new string[Argv.Count - 1];
 			int j = 0;
-			for (int i = 1; i < Argv.Length; i++) {
+			for (int i = 1; i < Argv.Count; i++) {
 				if (Argv[i] == "-p") {
 					createParents = true;
 				}

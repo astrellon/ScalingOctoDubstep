@@ -11,7 +11,7 @@ public class Cd : Program {
 		return "cd";
 	}
 	protected override void Run() {
-		if (Argv.Length <= 1) {
+		if (Argv.Count <= 1) {
 			StdOut.WriteLine("Need help");
 			return;
 		}

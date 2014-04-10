@@ -34,7 +34,7 @@ public abstract class Program {
     public bool Running {get; protected set;}
     public NixSystem MainSystem {get; private set;}
     public Session MainSession {get; private set;}
-    public string []Argv {get; private set;}
+    public IList<string> Argv {get; private set;}
     public int Result {get; protected set;}
     public Queue<ProgramEvent> Events {get; private set;}
 
@@ -78,13 +78,13 @@ public abstract class Program {
     }
 
     public abstract string GetCommand();
-    public int Execute(NixSystem system, Session session, string []argv) {
+    public int Execute(NixSystem system, Session session, IList<string> argv) {
         ExecuteAsync(system, session, argv);
         MainThread.Join();
         return Result;
     }
 
-    public void ExecuteAsync(NixSystem system, Session session, string []argv) {
+    public void ExecuteAsync(NixSystem system, Session session, IList<string> argv) {
         MainSystem = system;
         MainSession = session;
         Argv = argv;

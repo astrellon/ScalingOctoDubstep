@@ -10,7 +10,10 @@ public class Echo : Program {
 		return "echo";
 	}
 	protected override void Run() {
-		for (int i = 0; i < Argv.Length; i++) {
+		for (int i = 1; i < Argv.Count; i++) {
+            if (i > 1) {
+                StdOut.Write(" ");
+            }
 			StdOut.Write(Argv[i]);
 		}
 		StdOut.Write("\n");
