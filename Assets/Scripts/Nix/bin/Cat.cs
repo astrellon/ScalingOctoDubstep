@@ -20,10 +20,10 @@ public class Cat : Program {
 				if (MainSystem.RootDrive.IsFileOrDirectory(path)) {
 					FileStream file = File.OpenRead(MainSystem.RootDrive.GetPathTo(path.ToString()));
 					StreamReader reader = new StreamReader(file);
-					StdOut.WriteLine(reader.ReadToEnd());
+					WriteLine(StdOut, reader.ReadToEnd());
 				}
 				else {
-					StdOut.WriteLine(GetCommand() + ": " + Argv[i] + ": No such file or directory");
+					Write(StdOut, GetCommand() + ": " + Argv[i] + ": No such file or directory\n");
 				}
 			}
 		}

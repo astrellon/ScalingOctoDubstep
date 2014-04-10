@@ -14,7 +14,7 @@ public class Mkdir : Program {
 	protected override void Run() {
 		if (Argv.Length == 1) {
 			// Read from stdin
-			StdOut.WriteLine(GetCommand() + ": missing operand");
+			WriteLine(StdOut, GetCommand() + ": missing operand");
 		}
 		else {
 			bool createParents = false;
@@ -37,7 +37,7 @@ public class Mkdir : Program {
 				    MainSystem.RootDrive.MakeDirectory(new NixPath(copy[i]), createParents);
                 }
                 catch (Exception exp) {
-                    StdOut.WriteLine("Error creating directory: " + exp.Message);
+                    WriteLine(StdOut, "Error creating directory: " + exp.Message);
                     //Debug.Log("Error creating directory: " + exp.Message);
                 }
 			}

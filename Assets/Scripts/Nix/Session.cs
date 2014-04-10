@@ -53,7 +53,10 @@ public class Session {
     }
     public bool EchoInput() {
         if (ForegroundProgram != null) {
-            return ForegroundProgram.StdIn.EchoStream;
+            NixStream input = (NixStream)ForegroundProgram.StdIn;
+            if (input != null) {
+                return input.EchoStream;
+            }
         }
         return true;
     }

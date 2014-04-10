@@ -11,9 +11,9 @@ public class Echo : Program {
 	}
 	protected override void Run() {
 		for (int i = 0; i < Argv.Length; i++) {
-			StdOut.Write(Argv[i]);
+			Write(StdOut, Argv[i]);
 		}
-		StdOut.Write("\n");
+		Write(StdOut, "\n");
 		return;
 	}
 

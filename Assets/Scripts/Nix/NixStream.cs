@@ -119,6 +119,7 @@ public class NixStream : MemoryStream
             Monitor.PulseAll(Lock);
         }
     }
+    /*
     public void Write(string input)
     {
         if (!Enabled || input == null || input.Length == 0)
@@ -138,4 +139,5 @@ public class NixStream : MemoryStream
 	{
 		Write (input + "\n");
 	}
+    */
 }

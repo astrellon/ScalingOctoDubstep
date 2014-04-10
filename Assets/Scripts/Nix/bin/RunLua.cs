@@ -52,7 +52,7 @@ public class RunLua : Program {
 					l.DoFile(newPath.ToString());
 				}
 				else {
-					MainSession.Shell.StdOut.Write ("Unable to find file: " + Argv[0] + "\n");
+					WriteLine(StdOut, "Unable to find file: " + Argv[0]);
 				}
 			}
 			else {
@@ -61,7 +61,7 @@ public class RunLua : Program {
 		}
 		catch (Exception exp)
 		{
-			MainSession.Shell.StdOut.Write ("Exception executing Lua: " + exp.Message + "\n");
+			WriteLine(StdOut, "Exception executing Lua: " + exp.Message);
 		}
 	}
 }

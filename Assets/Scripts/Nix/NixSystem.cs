@@ -73,14 +73,14 @@ public class NixSystem : MonoBehaviour {
 	}
 
 	public bool BeginBoot() {
-		Shell.StdOut.Write("Booting...\n");
-		Shell.StdOut.Write("Booting Complete...\n");
+		WriteLine(Shell.StdOut, "Booting...");
+		WriteLine(Shell.StdOut, "Booting Complete...");
         
         Shell.ExecuteAsync(this, BaseSession, new string[]{""});
 		return true;
 	}
 
-	public void Execute(Session session, string input) {
+	public void Execute(Session session, string input, Stream StdOut = null, Stream StdIn = null) {
         Debug.Log("Execute: >" + input + "<");
         if (input.Length == 0) {
             return;
@@ -109,7 +109,7 @@ public class NixSystem : MonoBehaviour {
             Debug.Log("Attempting to create program: " + binName);
             prog = (Program)Activator.CreateInstance(BinPrograms[binName], NewPid());
 			if (prog == null) {
-				Shell.StdOut.Write("Unable to create " + binName + " program.\n");
+				WriteLine(Shell.StdOut, "Unable to create " + binName + " program");
 			}
 		}
 		else {
@@ -119,11 +119,19 @@ public class NixSystem : MonoBehaviour {
 			}
 		}
 		if (prog == null) {
-			Shell.StdOut.Write("Unable to find command: " + binName);
-			Shell.StdOut.Write("\n");
+            WriteLine(Shell.StdOut, "Unable to find command: " + binName);
 		}
 		else {
-			prog.StdOut = Shell.StdOut;
+            if (StdOut == null) {
+			    prog.StdOut = Shell.StdOut;
+            }
+            else {
+                prog.StdOut = StdOut;
+            }
+
+            if (StdIn != null) {
+                prog.StdIn = StdIn;
+            }
 			session.PushForegroundProgram(prog);
 			Debug.Log("Attempting to run program: " + binName);
 			String argsStr = "";
@@ -139,4 +147,12 @@ public class NixSystem : MonoBehaviour {
 			Debug.Log("Fin " + binName);
 		}
 	}
+    protected void Write(Stream stream, string buffer) {
+        byte []bytes = System.Text.Encoding.UTF8.GetBytes(buffer);
+        stream.Write(bytes, 0, bytes.Length);
+    }
+    protected void WriteLine(Stream stream, string buffer) {
+        byte []bytes = System.Text.Encoding.UTF8.GetBytes(buffer + "\n");
+        stream.Write(bytes, 0, bytes.Length);
+    }
 }

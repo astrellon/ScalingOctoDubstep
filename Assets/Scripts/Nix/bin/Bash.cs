@@ -19,30 +19,50 @@ public class Bash : Program {
         InputBuffer = "";
         HistoryPosition = -1;
 
-        Parser = new Regex("(\\$[a-zA-Z][a-zA-Z0-9]*)|([^\\$]+)"); 
+        Parser = new Regex("(\\$[a-zA-Z][a-zA-Z0-9]*)|([\\<\\>\\|])|([^\\$\\<\\>\\|]+)"); 
     }
 
     public override string GetCommand() {
         return "bash";
     }
-    public string Parse(string input) {
-		string result = "";
+    public List<string> Parse(string input) {
+        List<string> result = new List<string>();
+		string curr = "";
 		foreach (Match m in Parser.Matches(input)) {
-			if (m.Value[0] == '$' && m.Value.Length > 1) {
-                result += MainSession.GetEnvValue(m.Value.Substring(1));
+			if (m.Value.Length == 0) {
+				continue;
+			}
+            Debug.Log("Match: " + m.Value);
+            char first = m.Value[0];
+            if (first == '<' || first == '>' || first == '|') {
+                if (curr.Length > 0) {
+                    result.Add(curr);
+                }
+                result.Add(first.ToString());
+                curr = "";
+            }
+            else if (first == '$' && m.Value.Length > 1) {
+                curr += MainSession.GetEnvValue(m.Value.Substring(1));
 			}
 			else {
-				result += m.Value;
+				curr += m.Value;
 			}
 		}
+        if (curr.Length > 0) {
+            result.Add(curr);
+        }
 		return result;
     }
     public string ParsePS1(string input) {
-        string parsed = Parse(input);
+        List<string> parsed = Parse(input);
         
+        try {
+        if (parsed.Count == 0) {
+            return "";
+        }
         string result = "";
         Regex r = new Regex(@"(\\\[\\033([^\\\]]+)\\\])|([^\\\[]+)");
-        foreach (Match m in r.Matches(parsed)) {
+        foreach (Match m in r.Matches(parsed[0])) {
             if (m.Value.IndexOf(@"\[\033") == 0) {
                 result += "\x1b";
                 result += m.Groups[2];
@@ -53,12 +73,17 @@ public class Bash : Program {
         }
         
         return result;
+        }
+        catch (Exception exp) {
+            Debug.Log("Exception: " + exp.Message);
+        }
+        return "";
     }
     public void BeginInput() {
         string result = ParsePS1(MainSession.GetEnvValue("PS1"));
-        StdOut.Write(result);
+        Write(StdOut, result);
         // Important!
-        StdOut.Write("\x1b[s");
+        Write(StdOut, "\x1b[s");
     }
     protected string AutocompleteInput(string input, int cursor) {
         string result = "";
@@ -198,14 +223,25 @@ public class Bash : Program {
         char c = keyEvent.Character;
         if (c != '\0') {
             if (c == '\r' || c == '\n') {
-                StdOut.Write("\n");
+                Write(StdOut, "\n");
                 if (InputBuffer.Length > 1 && 
                     (History.Count == 0 || (History.Count > 0 && History[History.Count - 1] != InputBuffer))) {
                     History.Add(InputBuffer);
                 }
                 HistoryPosition = History.Count;
-                string result = Parse(InputBuffer);
-				MainSystem.Execute(MainSession, result);
+                List<string> result = Parse(InputBuffer);
+                if (result.Count == 1) {
+				    MainSystem.Execute(MainSession, result[0]);
+                }
+                else {
+                    if (result.Count == 3) {
+                        if (result[1] == ">") {
+                            NixPath filePath = new NixPath(result[2]);
+                            FileStream output = File.Open(MainSystem.RootDrive.GetPathTo(filePath.ToString()), FileMode.Create);
+                            MainSystem.Execute(MainSession, result[0], output);
+                        }
+                    }
+                }
                 BeginInput();
                 InputBuffer = "";
             }
@@ -282,10 +318,10 @@ public class Bash : Program {
         }
     }
     protected void WriteInputBuffer() {
-        StdOut.Write(0x1b);
-        StdOut.Write("[u");
-        StdOut.Write(InputBuffer);
-        StdOut.Write(0x1b);
-        StdOut.Write("[K");
+        Write(StdOut, 0x1b);
+        Write(StdOut, "[u");
+        Write(StdOut, InputBuffer);
+        Write(StdOut, 0x1b);
+        Write(StdOut, "[K");
     }
 }
