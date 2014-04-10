@@ -92,15 +92,6 @@ public abstract class Program {
         MainThread.Start();
     }
 
-    protected void Write(Stream stream, string buffer) {
-        byte []bytes = System.Text.Encoding.UTF8.GetBytes(buffer);
-        stream.Write(bytes, 0, bytes.Length);
-    }
-    protected void WriteLine(Stream stream, string buffer) {
-        byte []bytes = System.Text.Encoding.UTF8.GetBytes(buffer + "\n");
-        stream.Write(bytes, 0, bytes.Length);
-    }
-
     protected abstract void Run();
 
 }

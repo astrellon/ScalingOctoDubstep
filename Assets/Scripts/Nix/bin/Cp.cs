@@ -12,22 +12,22 @@ public class Cp : Program {
 	}
 	protected override void Run() {
 		if (Argv.Length <= 2) {
-			WriteLine(StdOut, "Need help");
+			StdOut.WriteLine("Need help");
 			return;
 		}
 		
 		NixPath fromPath = MainSession.WorkingDirectory.Combine(Argv[1]);
 		NixPath toPath = MainSession.WorkingDirectory.Combine(Argv[2]);
 
-		WriteLine(StdOut, "Copying from: " + fromPath + "\nCopying to: " + toPath);
+		StdOut.WriteLine("Copying from: " + fromPath + "\nCopying to: " + toPath);
 		try {
 			MainSystem.RootDrive.Copy(fromPath, toPath);
 		}
 		catch (System.IO.FileNotFoundException exp) {
-			WriteLine(StdOut, "No such file or directory: " + Argv[1]);
+			StdOut.WriteLine("No such file or directory: " + Argv[1]);
 		}
 		catch (System.Exception exp) {
-			WriteLine(StdOut, exp.Message);
+			StdOut.WriteLine(exp.Message);
 		}
 
 		//StdOut.Write ("No such file or directory: " + Argv[1]);

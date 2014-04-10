@@ -32,9 +32,9 @@ public class Bash : Program {
 			if (m.Value.Length == 0) {
 				continue;
 			}
-            Debug.Log("Match: " + m.Value);
             char first = m.Value[0];
             if (first == '<' || first == '>' || first == '|') {
+                curr = curr.Trim();
                 if (curr.Length > 0) {
                     result.Add(curr);
                 }
@@ -48,6 +48,7 @@ public class Bash : Program {
 				curr += m.Value;
 			}
 		}
+        curr = curr.Trim();
         if (curr.Length > 0) {
             result.Add(curr);
         }
@@ -81,9 +82,9 @@ public class Bash : Program {
     }
     public void BeginInput() {
         string result = ParsePS1(MainSession.GetEnvValue("PS1"));
-        Write(StdOut, result);
+        StdOut.Write(result);
         // Important!
-        Write(StdOut, "\x1b[s");
+        StdOut.Write("\x1b[s");
     }
     protected string AutocompleteInput(string input, int cursor) {
         string result = "";
@@ -223,7 +224,7 @@ public class Bash : Program {
         char c = keyEvent.Character;
         if (c != '\0') {
             if (c == '\r' || c == '\n') {
-                Write(StdOut, "\n");
+                StdOut.Write("\n");
                 if (InputBuffer.Length > 1 && 
                     (History.Count == 0 || (History.Count > 0 && History[History.Count - 1] != InputBuffer))) {
                     History.Add(InputBuffer);
@@ -291,7 +292,7 @@ public class Bash : Program {
         }
     }
     protected override void Run() {
-        StdIn.EchoStream = false;
+        StdIn.SetEchoStream(false);
         /*string path = MainSystem.RootDrive.GetPathTo("test.out"); 
         Debug.Log("Path: " + path);
         using (FileStream file = System.IO.File.Create(path)) {
@@ -318,10 +319,10 @@ public class Bash : Program {
         }
     }
     protected void WriteInputBuffer() {
-        Write(StdOut, 0x1b);
-        Write(StdOut, "[u");
-        Write(StdOut, InputBuffer);
-        Write(StdOut, 0x1b);
-        Write(StdOut, "[K");
+        StdOut.Write(0x1b);
+        StdOut.Write("[u");
+        StdOut.Write(InputBuffer);
+        StdOut.Write(0x1b);
+        StdOut.Write("[K");
     }
 }

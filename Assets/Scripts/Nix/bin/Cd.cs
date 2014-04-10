@@ -12,7 +12,7 @@ public class Cd : Program {
 	}
 	protected override void Run() {
 		if (Argv.Length <= 1) {
-			WriteLine(StdOut, "Need help");
+			StdOut.WriteLine("Need help");
 			return;
 		}
 
@@ -21,7 +21,7 @@ public class Cd : Program {
 			MainSession.SetWorkingDirectory(newPath);
 		}
 		else {
-			Write(StdOut, newPath.ToString() + " is not a directory.\n");
+			StdOut.Write(newPath.ToString() + " is not a directory.\n");
 		}
 		return;
 	}

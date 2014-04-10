@@ -73,8 +73,8 @@ public class NixSystem : MonoBehaviour {
 	}
 
 	public bool BeginBoot() {
-		WriteLine(Shell.StdOut, "Booting...");
-		WriteLine(Shell.StdOut, "Booting Complete...");
+		Shell.StdOut.WriteLine("Booting...");
+		Shell.StdOut.WriteLine("Booting Complete...");
         
         Shell.ExecuteAsync(this, BaseSession, new string[]{""});
 		return true;
@@ -109,7 +109,7 @@ public class NixSystem : MonoBehaviour {
             Debug.Log("Attempting to create program: " + binName);
             prog = (Program)Activator.CreateInstance(BinPrograms[binName], NewPid());
 			if (prog == null) {
-				WriteLine(Shell.StdOut, "Unable to create " + binName + " program");
+				Shell.StdOut.WriteLine("Unable to create " + binName + " program");
 			}
 		}
 		else {
@@ -119,7 +119,7 @@ public class NixSystem : MonoBehaviour {
 			}
 		}
 		if (prog == null) {
-            WriteLine(Shell.StdOut, "Unable to find command: " + binName);
+            Shell.StdOut.WriteLine("Unable to find command: " + binName);
 		}
 		else {
             if (StdOut == null) {
@@ -147,12 +147,4 @@ public class NixSystem : MonoBehaviour {
 			Debug.Log("Fin " + binName);
 		}
 	}
-    protected void Write(Stream stream, string buffer) {
-        byte []bytes = System.Text.Encoding.UTF8.GetBytes(buffer);
-        stream.Write(bytes, 0, bytes.Length);
-    }
-    protected void WriteLine(Stream stream, string buffer) {
-        byte []bytes = System.Text.Encoding.UTF8.GetBytes(buffer + "\n");
-        stream.Write(bytes, 0, bytes.Length);
-    }
 }

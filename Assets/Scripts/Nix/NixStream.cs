@@ -72,7 +72,7 @@ public class NixStream : MemoryStream
         }
         return result;
     }
-    public int Read(ref string dest, int maxRead = -1)
+    public int ReadString(ref string dest, int maxRead = -1)
     {
         byte[] buffer;
         int result = 0;
@@ -119,8 +119,8 @@ public class NixStream : MemoryStream
             Monitor.PulseAll(Lock);
         }
     }
-    /*
-    public void Write(string input)
+    
+    public void WriteString(string input)
     {
         if (!Enabled || input == null || input.Length == 0)
         {
@@ -135,9 +135,8 @@ public class NixStream : MemoryStream
             Monitor.PulseAll(Lock);
         }
     }
-	public void WriteLine(string input)
+	public void WriteStringLine(string input)
 	{
 		Write (input + "\n");
 	}
-    */
 }

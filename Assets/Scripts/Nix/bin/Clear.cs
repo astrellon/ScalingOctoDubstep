@@ -11,8 +11,8 @@ public class Clear : Program {
 		return "clear";
 	}
 	protected override void Run() {
-		Write(StdOut, 0x1b);
-		Write(StdOut, "[2J");
+		StdOut.Write(0x1b);
+		StdOut.Write("[2J");
 	}
 
 }

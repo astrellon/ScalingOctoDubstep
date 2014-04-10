@@ -20,15 +20,15 @@ public class Ls : Program {
 		if (files != null) {
 			for (int i = 0; i < files.Length; i++) {
 				FileInfo info = files[i].Info;
-				Write(StdOut, info.Name);
+				StdOut.Write(info.Name);
 				if ((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory) {
-					Write(StdOut, "/");
+					StdOut.Write("/");
 				}
-				Write(StdOut, "\n");
+				StdOut.Write("\n");
 			}
 		}
 		else {
-			Write(StdOut, newPath.ToString() + " is not a directory.\n");
+			StdOut.Write(newPath.ToString() + " is not a directory.\n");
 		}
 		return;
 	}

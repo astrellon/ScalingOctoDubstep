@@ -454,8 +454,9 @@ public class Terminal : MonoBehaviour {
         
         if (Shell != null) {
 			if (Shell.StdOut.Length - Shell.StdOut.Position > 0) {
-				byte []data = new byte[Shell.StdOut.Length - Shell.StdOut.Position];
-                Shell.StdOut.Read(data);
+                long maxRead = Shell.StdOut.Length - Shell.StdOut.Position;
+				byte []data = new byte[maxRead];
+                Shell.StdOut.Read(data, 0, (int)maxRead);
                 Write(data);
             }
         }
