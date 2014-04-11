@@ -32,7 +32,6 @@ public class RunLua : Program {
 		try
 		{
 			if (Argv.Count > 1 || PathToLua.Length > 0) {
-				//string file = MainSystem.RootDrive.GetPathTo(Argv[0]);
 				NixPath newPath;
 				if (PathToLua.Length > 0) {
 					newPath = new NixPath(PathToLua);
@@ -44,7 +43,6 @@ public class RunLua : Program {
 				Debug.Log ("File to load: " + file);
 				if (File.Exists(file)) {
 					string argStr = @"arg={}";
-					//argStr += "arg[0]=\"" + Argv[0] + "\"\n";
 					for (int i = 0; i < Argv.Count; i++) {
 						argStr += "arg[" + i + "]=\"" + Argv[i] + "\"\n";
 					}

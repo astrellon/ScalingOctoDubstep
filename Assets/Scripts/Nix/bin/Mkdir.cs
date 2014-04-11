@@ -25,7 +25,7 @@ public class Mkdir : Program {
 					createParents = true;
 				}
 				else {
-					copy[j++] = Argv[i];
+					copy[j++] = MainSession.WorkingDirectory.Combine(new NixPath(Argv[i])).ToString();
 				}
 			}
 			for (int i = 0; i < copy.Length; i++) {

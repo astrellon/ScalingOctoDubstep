@@ -320,17 +320,6 @@ public class Bash : Program {
     }
     protected override void Run() {
         StdIn.SetEchoStream(false);
-        /*string path = MainSystem.RootDrive.GetPathTo("test.out"); 
-        Debug.Log("Path: " + path);
-        using (FileStream file = System.IO.File.Create(path)) {
-            
-            NixStream stream = new NixStream(file);
-            string input = "";
-            stream.Read(ref input);
-            Debug.Log("Read from file: " + input);
-        }
-        */
-
         BeginInput();
         while (Running) {
             while (HasEvents()) {

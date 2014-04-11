@@ -19,7 +19,7 @@ public class NixPath {
 			SetPath(path);
 		}
 	}
-    public NixPath(NixPath path) {
+    public NixPath(NixPath path) { 
         Absolute = path.Absolute;
         if (path.Path.Count > 0) {
             SetPath(path.ToString());
@@ -66,6 +66,12 @@ public class NixPath {
         Path.RemoveAt(Path.Count - 1);
         Dirty = true;
         return value;
+    }
+    public string TopPath() {
+        if (Path.Count == 0) {
+            return "";
+        }
+        return Path[Path.Count - 1];
     }
 	public NixPath Combine(string path) {
 		NixPath newPath = new NixPath(this.ToString());

@@ -1,5 +1,6 @@
 public static class StreamExtensions 
 {
+    // General Stream extensions
     public static void Write(this System.IO.Stream stream, byte data) 
     {
         stream.Write(new byte[]{data}, 0, 1);
@@ -25,6 +26,7 @@ public static class StreamExtensions
         return 0;
     }
 
+    // NixStream specific
     public static void Write(this NixStream stream, string buffer) 
     {
         stream.WriteString(buffer);

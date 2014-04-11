@@ -106,7 +106,7 @@ public class NixStream : MemoryStream
         SetLength(0);
     }
 
-    public void Write(byte data)
+    public void WriteByte(byte data)
     {
         if (!Enabled)
         {
@@ -137,6 +137,6 @@ public class NixStream : MemoryStream
     }
 	public void WriteStringLine(string input)
 	{
-		Write (input + "\n");
+		WriteString(input + "\n");
 	}
 }

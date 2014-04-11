@@ -39,6 +39,8 @@ public class NixSystem : MonoBehaviour {
 		AddProgram("lua", typeof(RunLua));
 		AddProgram("cat", typeof(Cat));
 		AddProgram("mkdir", typeof(Mkdir));
+        AddProgram("mv", typeof(Mv));
+        AddProgram("rm", typeof(Rm));
         BaseSession = new Session();
         Shell = new Bash(NewPid());
         BaseSession.Shell = Shell;

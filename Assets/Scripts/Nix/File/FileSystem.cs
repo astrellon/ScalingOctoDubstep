@@ -29,6 +29,17 @@ public class FileSystem {
 		}
 		return RootFolder + "/" + path.ToString();
 	}
+    public bool IsDirectoryEmpty(string path) {
+        string tpath = GetPathTo(path);
+        if (Directory.Exists(tpath)) {
+            string []entries = Directory.GetFileSystemEntries(tpath);
+            return entries.Length == 0;
+        }
+        return true;
+    }
+    public bool IsDirectoryEmpty(NixPath path) {
+        return IsDirectoryEmpty(path.ToString());
+    }
 	public bool IsDirectory(string path) {
 		string tpath = GetPathTo(path);
 		return Directory.Exists(tpath);
@@ -69,6 +80,23 @@ public class FileSystem {
 			throw new Exception(exp.Message);
 		}
 	}
+    public void Move(NixPath fromPath, NixPath toPath) {
+		if (!IsFileOrDirectory(fromPath)) {
+			throw new System.IO.FileNotFoundException();
+		}
+		if (IsDirectory(toPath)) {
+			NixPath newPath = new NixPath(toPath.ToString());
+			newPath.AppendPath(fromPath.TopPath());
+			File.Move(GetPathTo(fromPath.ToString()), GetPathTo(newPath.ToString()));
+			return;
+		}
+		try {
+			File.Move(GetPathTo(fromPath.ToString()), GetPathTo(toPath.ToString()));
+		}
+		catch (Exception exp) {
+			throw new Exception(exp.Message);
+		}
+    }
 
 	public void MakeDirectory(NixPath path, bool createParents) {
         string pathStr = GetPathTo(path.ToString());
@@ -87,4 +115,12 @@ public class FileSystem {
 			}
 		}
 	}
+    public void DeleteDirectory(NixPath path, bool recursive) {
+        string tpath = path.ToString();
+        Debug.Log("Delete dir: " + tpath);
+        Directory.Delete(GetPathTo(tpath), recursive);
+    }
+    public void DeleteFile(NixPath path) {
+        File.Delete(GetPathTo(path.ToString()));
+    }
 }
