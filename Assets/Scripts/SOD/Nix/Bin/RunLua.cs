@@ -60,11 +60,12 @@ namespace SOD
                             Debug.Log("File to load: " + file);
                             if (File.Exists(file))
                             {
-                                string argStr = @"arg={}";
-                                for (int i = 0; i < Argv.Count; i++)
+                                string argStr = "arg={}\n";
+                                for (int i = 1; i < Argv.Count; i++)
                                 {
-                                    argStr += "arg[" + i + "]=\"" + Argv[i] + "\"\n";
+                                    argStr += "arg[" + (i - 1) + "]=\"" + Argv[i] + "\"\n";
                                 }
+								Debug.Log ("Lua args: " + argStr);
                                 l.DoString(argStr);
                                 l.DoFile(newPath.ToString());
                             }

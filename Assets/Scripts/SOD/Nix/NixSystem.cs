@@ -81,6 +81,7 @@ namespace SOD
                 */
 
                 BeginBoot();
+
             }
 
             public bool BeginBoot()
@@ -103,21 +104,40 @@ namespace SOD
                 {
                     return;
                 }
+                /*if (input == "test")
+                {
+                    System.Reflection.Assembly assembly = System.Reflection.Assembly.LoadFile(@"F:\git\ScalingOctoDubstep\root\usr\bin\Test");
+
+                    string type = "Test";
+                    try
+                    {
+                        Type[] types = assembly.GetTypes();
+                        object o = Activator.CreateInstance(types[0], NewPid());
+                        Nix.Bin.Program proga = (Nix.Bin.Program)o;
+                        proga.StdOut = Shell.StdOut;
+                        proga.Execute(this, BaseSession, new string[] { "Test" });
+                    }
+                    catch (Exception exp)
+                    {
+                        Debug.Log("QWEASD: " + exp.Message);
+                    }
+                    return;
+                }*/
                 Regex regex = new Regex("(\".*\")|([^ \\t\\n\\r]+)");
 
                 MatchCollection matches = regex.Matches(input);
-                string[] args = new string[matches.Count];
-                //string binName = "";
+                //string[] args = new string[matches.Count];
+                List<string> args = new List<string>(matches.Count + 1);
                 int i = 0;
                 foreach (Match match in regex.Matches(input))
                 {
                     if (match.Value[0] == '"')
                     {
-                        args[i++] = match.Value.Substring(1, match.Value.Length - 2);
+                        args.Add(match.Value.Substring(1, match.Value.Length - 2));
                     }
                     else
                     {
-                        args[i++] = match.Value;
+                        args.Add(match.Value);
                     }
                 }
 
@@ -138,6 +158,18 @@ namespace SOD
                     NixPath binPath = new NixPath("/usr/bin/" + binName);
                     if (RootDrive.IsFile(binPath))
                     {
+                        using (StreamReader reader = new StreamReader(RootDrive.GetPathTo(binPath.ToString())))
+                        {
+                            string firstLine = reader.ReadLine();
+                            if (firstLine.Length > 2)
+                            {
+                                if (firstLine[0] == '#' && firstLine[1] == '!')
+                                {
+                                    Debug.Log("Has a shebang! " + firstLine);
+                                }
+                            }
+                        }
+                        args.Insert(0, "lua");
                         prog = new Bin.RunLua(NewPid(), "/usr/bin/" + binName);
                     }
                 }
@@ -163,7 +195,7 @@ namespace SOD
                     session.PushForegroundProgram(prog);
                     Debug.Log("Attempting to run program: " + binName);
                     String argsStr = "";
-                    for (int j = 0; j < args.Length; j++)
+                    for (int j = 0; j < args.Count; j++)
                     {
                         if (j > 0)
                         {
