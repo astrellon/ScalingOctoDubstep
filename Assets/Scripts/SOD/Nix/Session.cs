@@ -11,11 +11,11 @@ namespace SOD
 
             public string User { get; set; }
             public NixPath WorkingDirectory { get; set; }
-            public Program ForegroundProgram { get; set; }
+            public Bin.Program ForegroundProgram { get; set; }
             public Dictionary<string, string> EnvironmentVariables { get; set; }
 
-            private Bash _Shell;
-            public Bash Shell
+            private Bin.Bash _Shell;
+            public Bin.Bash Shell
             {
                 get
                 {
@@ -29,13 +29,13 @@ namespace SOD
             }
 
             public string InputBuffer { get; protected set; }
-            public Stack<Program> ActiveStack { get; private set; }
+            public Stack<Bin.Program> ActiveStack { get; private set; }
 
             public Session()
             {
                 WorkingDirectory = new NixPath();
                 WorkingDirectory.Absolute = true;
-                ActiveStack = new Stack<Program>();
+                ActiveStack = new Stack<Bin.Program>();
                 EnvironmentVariables = new Dictionary<string, string>();
                 EnvironmentVariables["HOSTNAME"] = "unknown_host";
                 EnvironmentVariables["USER"] = "alan";
@@ -50,7 +50,7 @@ namespace SOD
                 EnvironmentVariables["PWD"] = path.ToString();
             }
 
-            public void PushForegroundProgram(Program program)
+            public void PushForegroundProgram(Bin.Program program)
             {
                 if (ForegroundProgram != null)
                 {
@@ -109,14 +109,14 @@ namespace SOD
                     }
                     if (ForegroundProgram != null)
                     {
-                        ForegroundProgram.PushEvent(new Program.KeyboardEvent(Program.KeyboardDown, e.character, (int)e.keyCode));
+                        ForegroundProgram.PushEvent(new Bin.Program.KeyboardEvent(Bin.Program.KeyboardDown, e.character, (int)e.keyCode));
                     }
                 }
                 else if (e.type == EventType.KeyUp)
                 {
                     if (ForegroundProgram != null)
                     {
-                        ForegroundProgram.PushEvent(new Program.KeyboardEvent(Program.KeyboardUp, e.character, (int)e.keyCode));
+                        ForegroundProgram.PushEvent(new Bin.Program.KeyboardEvent(Bin.Program.KeyboardUp, e.character, (int)e.keyCode));
                     }
                 }
             }

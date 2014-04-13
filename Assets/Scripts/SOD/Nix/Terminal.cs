@@ -30,7 +30,7 @@ namespace SOD
             public int SavedCursorY { get; set; }
             public string InputBuffer { get; set; }
             public Session CurrentSession { get; set; }
-            public Program Shell { get; set; }
+            public Bin.Program Shell { get; set; }
             protected List<byte> CommandSequence = null;
             public int ScrollX { get; set; }
             public int ScrollY { get; set; }

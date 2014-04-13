@@ -14,10 +14,10 @@ namespace SOD
         {
 
             public Session BaseSession { get; set; }
-            public Bash Shell { get; private set; }
+            public Bin.Bash Shell { get; private set; }
             public Dictionary<string, Type> BinPrograms { get; set; }
-            public FileSystem RootDrive { get; set; }
-            public Dictionary<int, Program> ActivePrograms { get; private set; }
+            public FileSystem.FileSystem RootDrive { get; set; }
+            public Dictionary<int, Bin.Program> ActivePrograms { get; private set; }
             public int PidCounter { get; protected set; }
             public Lua.LuaOptions BaseLuaOptions { get; protected set; }
 
@@ -32,25 +32,25 @@ namespace SOD
 
             public void Start()
             {
-                RootDrive = new FileSystem();
+                RootDrive = new FileSystem.FileSystem();
                 RootDrive.RootFolder = Path.Combine(Directory.GetCurrentDirectory(), "root");
                 Directory.CreateDirectory(RootDrive.RootFolder);
-                ActivePrograms = new Dictionary<int, Program>();
+                ActivePrograms = new Dictionary<int, Bin.Program>();
 
                 BinPrograms = new Dictionary<string, Type>();
-                AddProgram("echo", typeof(Echo));
-                AddProgram("pwd", typeof(Pwd));
-                AddProgram("cd", typeof(Cd));
-                AddProgram("cp", typeof(Cp));
-                AddProgram("ls", typeof(Ls));
-                AddProgram("clear", typeof(Clear));
-                AddProgram("lua", typeof(RunLua));
-                AddProgram("cat", typeof(Cat));
-                AddProgram("mkdir", typeof(Mkdir));
-                AddProgram("mv", typeof(Mv));
-                AddProgram("rm", typeof(Rm));
+                AddProgram("echo", typeof(Bin.Echo));
+                AddProgram("pwd", typeof(Bin.Pwd));
+                AddProgram("cd", typeof(Bin.Cd));
+                AddProgram("cp", typeof(Bin.Cp));
+                AddProgram("ls", typeof(Bin.Ls));
+                AddProgram("clear", typeof(Bin.Clear));
+                AddProgram("lua", typeof(Bin.RunLua));
+                AddProgram("cat", typeof(Bin.Cat));
+                AddProgram("mkdir", typeof(Bin.Mkdir));
+                AddProgram("mv", typeof(Bin.Mv));
+                AddProgram("rm", typeof(Bin.Rm));
                 BaseSession = new Session();
-                Shell = new Bash(NewPid());
+                Shell = new Bin.Bash(NewPid());
                 BaseSession.Shell = Shell;
 
                 Terminal term = GetComponent<Terminal>();
@@ -92,7 +92,11 @@ namespace SOD
                 return true;
             }
 
-            public void Execute(Session session, string input, Stream StdOut = null, Stream StdIn = null)
+            public void Execute(Session session, string input)
+            {
+                Execute(session, input, null, null);
+            }
+            public void Execute(Session session, string input, Stream StdOut, Stream StdIn)
             {
                 Debug.Log("Execute: >" + input + "<");
                 if (input.Length == 0)
@@ -119,11 +123,11 @@ namespace SOD
 
                 string binName = args[0];
 
-                Program prog = null;
+                Bin.Program prog = null;
                 if (BinPrograms.ContainsKey(binName))
                 {
                     Debug.Log("Attempting to create program: " + binName);
-                    prog = (Program)Activator.CreateInstance(BinPrograms[binName], NewPid());
+                    prog = (Bin.Program)Activator.CreateInstance(BinPrograms[binName], NewPid());
                     if (prog == null)
                     {
                         Shell.StdOut.WriteLine("Unable to create " + binName + " program");
@@ -134,7 +138,7 @@ namespace SOD
                     NixPath binPath = new NixPath("/usr/bin/" + binName);
                     if (RootDrive.IsFile(binPath))
                     {
-                        prog = new RunLua(NewPid(), "/usr/bin/" + binName);
+                        prog = new Bin.RunLua(NewPid(), "/usr/bin/" + binName);
                     }
                 }
                 if (prog == null)
