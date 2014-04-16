@@ -63,7 +63,9 @@ namespace SOD
                     StdOut = stdout;
                     if (stdin == null)
                     {
-                        stdin = new NixStream();
+                        NixStream s = new NixStream();
+                        s.EchoStream = true;
+                        stdin = s;
                     }
                     StdIn = stdin;
                     if (stderr == null)

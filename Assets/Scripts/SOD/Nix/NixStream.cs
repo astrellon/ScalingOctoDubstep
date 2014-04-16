@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
+using UnityEngine;
 
 namespace SOD
 {
@@ -124,18 +125,33 @@ namespace SOD
                 }
             }
 
+            public void Write(byte[] input, int offset, int count)
+            {
+                if (!Enabled || input == null || count == 0)
+                {
+                    return;
+                }
+                Debug.Log("WRITIN BYTES!");
+                lock (Lock)
+                {
+                    base.Position = Length;
+                    base.Write(input, offset, count);
+                    Monitor.PulseAll(Lock);
+                }
+            }
             public void WriteString(string input)
             {
                 if (!Enabled || input == null || input.Length == 0)
                 {
                     return;
                 }
+                Debug.Log("WRITING STRING!");
                 byte[] bytes = System.Text.Encoding.UTF8.GetBytes(input);
 
                 lock (Lock)
                 {
                     base.Position = Length;
-                    Write(bytes, 0, bytes.Length);
+                    base.Write(bytes, 0, bytes.Length);
                     Monitor.PulseAll(Lock);
                 }
             }

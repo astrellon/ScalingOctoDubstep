@@ -454,7 +454,6 @@ namespace SOD
             {
                 for (int i = 0; i < data.Length; i++)
                 {
-                    //Debug.Log("Writing to terminal (" + i + "/" + data.Length + "): " + data[i]);
                     Write(data[i]);
                 }
             }
@@ -488,30 +487,18 @@ namespace SOD
                             builder.Append('>');
                             currentColour = c;
                         }
-                        /*
-                        if (bold != currentBold) {
-                            if (bold) {
-                                builder.Append("<b>");
-                            }
-                            else {
-                                builder.Append("</b>");
-                            }
-                            currentBold = bold;
-                        }
-                        */
                         builder.Append(text[j]);
                     }
                 }
-                /*if (CurrentSession.EchoInput())
+                if (CurrentSession.EchoInput())
                 {
                     builder.Append(CurrentSession.InputBuffer);
-                }*/
+                }
                 builder.Append("</color>");
                 return builder.ToString();
             }
             void OnGUI()
             {
-
                 if (Event.current.isKey)
                 {
                     CurrentSession.KeyboardEvent(Event.current);

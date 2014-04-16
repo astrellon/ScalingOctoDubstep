@@ -12,6 +12,17 @@ namespace SOD
     {
         public class NixSystem : MonoBehaviour
         {
+            public struct FindCommandResult
+            {
+                public string Path;
+                public bool Builtin;
+                public bool Found;
+            }
+            public struct ProgramRunType
+            {
+                public string Shebang;
+                public bool BinaryCode;
+            }
 
             public Session BaseSession { get; set; }
             public Bin.Bash Shell { get; private set; }
@@ -93,6 +104,61 @@ namespace SOD
                 return true;
             }
 
+            public FindCommandResult FindCommand(string cmd)
+            {
+                Debug.Log("Searching for: " + cmd);
+                FindCommandResult result = new FindCommandResult();
+                string []envPathSplit = BaseSession.GetEnvValue("PATH").Split(new char[]{':'});
+
+                for (int i = 0; i < envPathSplit.Length; i++) {
+                    NixPath path = new NixPath(envPathSplit[i]);
+                    path.AppendPath(cmd);
+                    if (RootDrive.IsFile(path)) {
+                        result.Path = path.ToString();
+                        result.Builtin = false;
+                        result.Found = true;
+                        return result;
+                    }
+                }
+
+                if (BinPrograms.ContainsKey(cmd)) {
+                    result.Path = cmd;
+                    result.Builtin = true;
+                    result.Found = true;
+                    return result;
+                }
+
+                result.Found = false;
+                return result;
+            }
+            public ProgramRunType GetProgramRunType(string cmd)
+            {
+                NixPath path = new NixPath(cmd);
+
+                ProgramRunType result = new ProgramRunType();
+                using (StreamReader reader = new StreamReader(RootDrive.GetPathTo(path.ToString())))
+                {
+                    string firstLine = reader.ReadLine();
+                    if (firstLine.Length > 2)
+                    {
+                        if (firstLine[0] == '#' && firstLine[1] == '!')
+                        {
+                            Debug.Log("Has a shebang! " + firstLine);
+                            result.BinaryCode = false;
+                            result.Shebang = firstLine.Substring(2);
+                        }
+                        // Definitly not a good way of determining if it is a DLL
+                        // Need to look further into the file to determine if it really is.
+                        else if (firstLine[0] == 'M' && firstLine[1] == 'Z')
+                        {
+                            Debug.Log("Possibly a DLL");
+                            result.BinaryCode = true;
+                        }
+                    }
+                }
+                return result;
+            }
+
             public void Execute(Session session, string input)
             {
                 Execute(session, input, null, null);
@@ -143,8 +209,16 @@ namespace SOD
 
                 string binName = args[0];
 
+                FindCommandResult cmdLookup = FindCommand(binName);
+                if (!cmdLookup.Found) 
+                {
+                    Shell.StdOut.WriteLine("Unable to find command: " + binName);
+                    return;
+                }
+                args[0] = cmdLookup.Path;
+
                 Bin.Program prog = null;
-                if (BinPrograms.ContainsKey(binName))
+                if (cmdLookup.Builtin)
                 {
                     Debug.Log("Attempting to create program: " + binName);
                     prog = (Bin.Program)Activator.CreateInstance(BinPrograms[binName], NewPid());
@@ -155,24 +229,34 @@ namespace SOD
                 }
                 else
                 {
-                    NixPath binPath = new NixPath("/usr/bin/" + binName);
-                    if (RootDrive.IsFile(binPath))
+                    ProgramRunType programRunType = GetProgramRunType(cmdLookup.Path);
+                    Debug.Log("Program type: " + programRunType.Shebang);
+                    while (programRunType.Shebang.Length > 0) 
                     {
-                        using (StreamReader reader = new StreamReader(RootDrive.GetPathTo(binPath.ToString())))
+                        cmdLookup = FindCommand(programRunType.Shebang);
+                        if (!cmdLookup.Found)
                         {
-                            string firstLine = reader.ReadLine();
-                            if (firstLine.Length > 2)
-                            {
-                                if (firstLine[0] == '#' && firstLine[1] == '!')
-                                {
-                                    Debug.Log("Has a shebang! " + firstLine);
-                                }
-                            }
+                            Shell.StdOut.WriteLine("Unable to execute command: " + programRunType.Shebang + " for " + binName);
+                            return;
                         }
-                        args.Insert(0, "lua");
-                        prog = new Bin.RunLua(NewPid(), "/usr/bin/" + binName);
+                        args.Insert(0, cmdLookup.Path);
+                        if (cmdLookup.Builtin)
+                        {
+                            binName = cmdLookup.Path;
+                            prog = (Bin.Program)Activator.CreateInstance(BinPrograms[binName], NewPid());
+                            programRunType.Shebang = "";
+                        }
+                        else
+                        {
+                            programRunType = GetProgramRunType(cmdLookup.Path);
+                        }
+                    }
+                    if (programRunType.BinaryCode) 
+                    {
+                        // Do something about loading up a DLL
                     }
                 }
+
                 if (prog == null)
                 {
                     Shell.StdOut.WriteLine("Unable to find command: " + binName);

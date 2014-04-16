@@ -42,6 +42,7 @@ namespace SOD
                 EnvironmentVariables["HOSTTYPE"] = "magic";
                 EnvironmentVariables["PWD"] = WorkingDirectory.ToString();
                 EnvironmentVariables["PS1"] = @"\[\033[1;32m\]$USER@$HOSTNAME\[\033[0m\]:\[\033[1;34m\]$PWD\[\033[0m\]- ";
+                EnvironmentVariables["PATH"] = @"/usr/bin";
             }
 
             public void SetWorkingDirectory(NixPath path)
@@ -98,6 +99,7 @@ namespace SOD
                         {
                             if (EchoInput())
                             {
+                                Debug.Log("Echoing input: " + temp);
                                 ForegroundProgram.StdOut.Write(temp);
                             }
                             ForegroundProgram.StdIn.Write(temp);

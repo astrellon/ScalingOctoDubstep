@@ -2,6 +2,7 @@ namespace SOD
 {
     namespace Nix
     {
+        // THERE HAS TO BE A BETTER WAY!!!
         public static class StreamExtensions
         {
             // General Stream extensions
@@ -11,11 +12,23 @@ namespace SOD
             }
             public static void Write(this System.IO.Stream stream, string buffer)
             {
+                NixStream nixStream = (NixStream)stream;
+                if (nixStream != null)
+                {
+                    nixStream.WriteString(buffer);
+                    return;
+                }
                 byte[] bytes = System.Text.Encoding.UTF8.GetBytes(buffer);
                 stream.Write(bytes, 0, bytes.Length);
             }
             public static void WriteLine(this System.IO.Stream stream, string buffer)
             {
+                NixStream nixStream = (NixStream)stream;
+                if (nixStream != null)
+                {
+                    nixStream.WriteStringLine(buffer);
+                    return;
+                }
                 byte[] bytes = System.Text.Encoding.UTF8.GetBytes(buffer + "\n");
                 stream.Write(bytes, 0, bytes.Length);
             }
