@@ -131,7 +131,6 @@ namespace SOD
                 {
                     return;
                 }
-                Debug.Log("WRITIN BYTES!");
                 lock (Lock)
                 {
                     base.Position = Length;
@@ -145,7 +144,6 @@ namespace SOD
                 {
                     return;
                 }
-                Debug.Log("WRITING STRING!");
                 byte[] bytes = System.Text.Encoding.UTF8.GetBytes(input);
 
                 lock (Lock)
