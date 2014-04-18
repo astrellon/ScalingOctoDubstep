@@ -28,8 +28,8 @@ namespace SOD
                         return;
                     }
 
-                    NixPath fromPath = MainSession.WorkingDirectory.Combine(Argv[1]);
-                    NixPath toPath = MainSession.WorkingDirectory.Combine(Argv[2]);
+                    NixPath fromPath = MainSession.PhysicalDirectory.Combine(Argv[1]);
+                    NixPath toPath = OpenPath(Argv[2]);
 
                     StdOut.WriteLine("Copying from: " + fromPath + "\nCopying to: " + toPath);
                     try

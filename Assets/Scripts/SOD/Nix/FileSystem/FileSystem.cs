@@ -93,6 +93,10 @@ namespace SOD
                     string tpath = GetPathTo(path);
                     return File.Exists(tpath) || Directory.Exists(tpath);
                 }
+                public bool IsSymlink(NixPath path)
+                {
+                    return GetLink(path) != null;
+                }
 
                 public void Copy(NixPath fromPath, NixPath toPath)
                 {
@@ -171,36 +175,61 @@ namespace SOD
                 }
                 public NixPath GetLink(NixPath path)
                 {
-                    FileStream stream = File.OpenRead(GetPathTo(path));
-                    byte []symcheck = new byte[SymlinkHeader.Length];
-                    int read = stream.Read(symcheck, 0, symcheck.Length);
-                    if (read != symcheck.Length)
+					try
                     {
-                        return null;
-                    }
-                    for (int i = 0; i < SymlinkHeader.Length; i++)
-                    {
-                        if (symcheck[i] != SymlinkHeader[i])
+                        FileStream stream = File.OpenRead(GetPathTo(path));
+                        byte []symcheck = new byte[SymlinkHeader.Length];
+                        int read = stream.Read(symcheck, 0, symcheck.Length);
+                        if (read != symcheck.Length)
                         {
                             return null;
                         }
+                        for (int i = 0; i < SymlinkHeader.Length; i++)
+                        {
+                            if (symcheck[i] != SymlinkHeader[i])
+                            {
+                                return null;
+                            }
+                        }
+                        long remaining = stream.Length - symcheck.Length;
+                        byte []pathBytes = new byte[remaining];
+                        stream.Read(pathBytes, 0, (int)remaining); 
+                        string pathStr = System.Text.Encoding.UTF8.GetString(pathBytes); 
+                        return new NixPath(pathStr);
                     }
-                    long remaining = stream.Length - symcheck.Length;
-                    byte []pathBytes = new byte[remaining];
-                    stream.Read(pathBytes, 0, (int)remaining); 
-                    string pathStr = System.Text.Encoding.UTF8.GetString(pathBytes); 
-                    return new NixPath(pathStr);
+                    catch (Exception exp) 
+                    {
+                        Debug.Log("Error following link: " + exp.Message);
+                    }
+					return null;
                 }
                 public NixPath FollowLinks(NixPath path)
                 {
-                    NixPath parent = path;
-                    NixPath link = GetLink(path);
-                    while (link != null)
-                    {
-                        parent = link;
-                        link = GetLink(link);
+                    if (path.Path.Count == 0) {
+                        return path;
                     }
-                    return parent;
+                    NixPath build = new NixPath();
+                    for (int i = 0; i < path.Path.Count; i++)
+                    {
+                        build.AppendPath(path.Path[i]);
+                        if (IsDirectory(build))
+                        {
+                            continue;
+                        }
+
+                        NixPath link = GetLink(build);
+                        while (link != null)
+                        {
+                            build = link;
+                            link = GetLink(link);
+                        }
+
+                        if (build == null)
+                        {
+                            return path;
+                        }
+                    }
+                    return build;
                 }
             }
         }

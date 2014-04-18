@@ -67,7 +67,7 @@ namespace SOD
                     {
                         for (int i = 0; i < files.Count; i++)
                         {
-                            NixPath file = MainSession.WorkingDirectory.Combine(new NixPath(files[i]));
+                            NixPath file = MainSession.PhysicalDirectory.Combine(new NixPath(files[i]));
                             if (MainSystem.RootDrive.IsDirectory(file))
                             {
                                 if (!recursive)

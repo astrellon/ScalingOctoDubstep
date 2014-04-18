@@ -11,7 +11,7 @@ public class NixPath {
 
 	public NixPath(string path = "") {
         Absolute = false;
-        if (path.Length > 0 && path[0] == '/') {
+        if (path.Length > 0 && (path[0] == '/' || path[0] == '\\')) {
             Absolute = true;
         }
 		Path = new List<string>();
@@ -29,12 +29,12 @@ public class NixPath {
         if (path == null || path.Length == 0) {
             return;
         }
-		if (path[0] == '/') {
+		if (path[0] == '/' || path[0] == '\\') {
 			Path.Clear ();
             Absolute = true;
             Dirty = true;
         }
-        string []split = path.Split('/');
+        string []split = path.Split(new char[]{'/', '\\'});
 		for (int i = 0; i < split.Length; i++) {
 			if (split[i].Length == 0) {
 				continue;
@@ -90,19 +90,22 @@ public class NixPath {
         Absolute = false;
 		AppendPath(path);
         Dirty = true;
-	}
-	override public string ToString() {
+    }
+    override public string ToString() {
+        return ToString(false);
+    }
+    public string ToString(bool backslash) {
         if (!Dirty) {
             return Combined;
         }
-        
-		string result = "";
-		if (Absolute) {
-			result = "/";
+
+        string result = "";
+        if (Absolute) {
+			result = backslash ? "\\" : "/";
 		}
 		for (int i = 0; i < Path.Count; i++) {
 			if (i > 0) {
-				result += '/';
+				result += backslash ? "\\" : "/";
 			}
 			result += Path[i];
 		}

@@ -28,8 +28,11 @@ namespace SOD
                         return;
                     }
 
+                    //NixPath newPath = MainSession.WorkingDirectory.Combine(Argv[1]);
                     NixPath newPath = MainSession.WorkingDirectory.Combine(Argv[1]);
-                    if (MainSystem.RootDrive.IsDirectory(newPath.ToString()))
+                    NixPath followedPath = MainSystem.RootDrive.FollowLinks(MainSession.PhysicalDirectory.Combine(Argv[1]));
+                    Debug.Log("Followed path: " + followedPath.ToString());
+                    if (MainSystem.RootDrive.IsDirectory(followedPath))
                     {
                         MainSession.SetWorkingDirectory(newPath);
                     }

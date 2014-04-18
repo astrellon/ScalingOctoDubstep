@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System;
 
@@ -31,8 +32,32 @@ namespace SOD
                     else
                     {
                         bool createParents = false;
-                        string[] copy = new string[Argv.Count - 1];
-                        int j = 0;
+                        //string[] copy = new string[Argv.Count - 1];
+                        List<NixPath> copy = new List<NixPath>();
+                        bool error = false;
+                        for (int i = 1; i < Argv.Count; i++) {
+                            string arg = Argv[i];
+                            if (arg[0] == '-') {
+                                for (int j = 1; j < arg.Length; j++) {
+                                    if (arg[j] == 'p') {
+                                        createParents = true;
+                                    }
+                                    else {
+                                        StdOut.WriteLine("Unknown argument: " + arg[j]);
+                                        error = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                copy.Add(MainSession.PhysicalDirectory.Combine(arg));
+                            }
+                        }
+                        if (error) {
+                            return;
+                        }
+                        /*
                         for (int i = 1; i < Argv.Count; i++)
                         {
                             if (Argv[i] == "-p")
@@ -41,19 +66,20 @@ namespace SOD
                             }
                             else
                             {
-                                copy[j++] = MainSession.WorkingDirectory.Combine(new NixPath(Argv[i])).ToString();
+                                copy[j++] = MainSession.PhysicalDirectory.Combine(Argv[i]).ToString();
                             }
                         }
-                        for (int i = 0; i < copy.Length; i++)
+                        */
+                        for (int i = 0; i < copy.Count; i++)
                         {
                             Debug.Log("Copy arg " + copy[i]);
-                            if (copy[i].Length == 0)
+                            if (copy[i].ToString().Length == 0)
                             {
                                 break;
                             }
                             try
                             {
-                                MainSystem.RootDrive.MakeDirectory(new NixPath(copy[i]), createParents);
+                                MainSystem.RootDrive.MakeDirectory(copy[i], createParents);
                             }
                             catch (Exception exp)
                             {

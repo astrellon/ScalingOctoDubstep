@@ -60,6 +60,7 @@ namespace SOD
                 AddProgram("mkdir", typeof(Bin.Mkdir));
                 AddProgram("mv", typeof(Bin.Mv));
                 AddProgram("rm", typeof(Bin.Rm));
+                AddProgram("ln", typeof(Bin.Ln));
                 BaseSession = new Session();
                 Shell = new Bin.Bash(NewPid());
                 BaseSession.Shell = Shell;
@@ -103,8 +104,10 @@ namespace SOD
 
                 Shell.ExecuteAsync(this, BaseSession, new string[] { "" });
 
-                NixPath link = RootDrive.FollowLinks(new NixPath("/link"));
+                
+                NixPath link = RootDrive.FollowLinks(new NixPath("/melli/docs"));
                 Debug.Log("LINK: " + link.ToString());
+                
 
                 return true;
             }

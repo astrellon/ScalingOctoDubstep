@@ -235,7 +235,7 @@ namespace SOD
                     // Path is already correct?
                     // Extend to deal with situations where the file/folder already exists
                     // but there are other entires that will still match it.
-                    NixPath full = MainSession.WorkingDirectory.Combine(input);
+                    NixPath full = OpenPath(input);
                     if (full.IsRoot() ||
                             MainSystem.RootDrive.IsFile(full) ||
                             MainSystem.RootDrive.IsDirectory(full))
@@ -251,7 +251,7 @@ namespace SOD
                         baseinput = input.Substring(0, index);
                     }
 
-                    NixPath combined = MainSession.WorkingDirectory.Combine(baseinput);
+                    NixPath combined = OpenPath(baseinput);
                     if (MainSystem.RootDrive.IsDirectory(combined))
                     {
                         FileNode[] files = MainSystem.RootDrive.ListFiles(combined.ToString());

@@ -42,7 +42,7 @@ namespace SOD
                     opts.RootFolder = MainSystem.RootDrive.RootFolder + "\\";
                     opts.ExecuteHandler = ExecuteHandler;
                     Lua l = new Lua(opts);
-                    l.SetWorkingDirectory(MainSession.WorkingDirectory.ToString());
+                    l.SetWorkingDirectory(MainSession.PhysicalDirectory.ToString());
                     try
                     {
                         if (Argv.Count > 1 || PathToLua.Length > 0)

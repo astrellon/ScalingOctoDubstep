@@ -22,10 +22,11 @@ namespace SOD
                 }
                 protected override void Run()
                 {
-                    NixPath newPath = MainSession.WorkingDirectory;
+                    NixPath newPath = MainSession.PhysicalDirectory;
                     if (Argv.Count > 1)
                     {
-                        newPath = MainSession.WorkingDirectory.Combine(Argv[1]);
+                        //newPath = MainSession.WorkingDirectory.Combine(Argv[1]);
+                        newPath = OpenPath(Argv[1]);
                     }
 
                     FileNode[] files = MainSystem.RootDrive.ListFiles(newPath.ToString());
@@ -46,7 +47,6 @@ namespace SOD
                     {
                         StdOut.Write(newPath.ToString() + " is not a directory.\n");
                     }
-                    return;
                 }
             }
         }
