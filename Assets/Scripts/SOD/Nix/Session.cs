@@ -10,9 +10,11 @@ namespace SOD
         {
 
             public string User { get; set; }
-            public NixPath WorkingDirectory { get; set; }
+            public NixPath WorkingDirectory { get; private set; }
+            public NixPath PhysicalDirectory {get; private set; }
             public Bin.Program ForegroundProgram { get; set; }
             public Dictionary<string, string> EnvironmentVariables { get; set; }
+            public NixSystem MainSystem {get; set;}
 
             private Bin.Bash _Shell;
             public Bin.Bash Shell
@@ -35,6 +37,9 @@ namespace SOD
             {
                 WorkingDirectory = new NixPath();
                 WorkingDirectory.Absolute = true;
+                PhysicalDirectory = new NixPath();
+                PhysicalDirectory.Absolute = true;
+
                 ActiveStack = new Stack<Bin.Program>();
                 EnvironmentVariables = new Dictionary<string, string>();
                 EnvironmentVariables["HOSTNAME"] = "unknown_host";
@@ -49,6 +54,7 @@ namespace SOD
             {
                 WorkingDirectory = path;
                 EnvironmentVariables["PWD"] = path.ToString();
+                PhysicalDirectory = MainSystem.RootDrive.FollowLinks(path); 
             }
 
             public void PushForegroundProgram(Bin.Program program)
@@ -70,7 +76,7 @@ namespace SOD
             {
                 if (ForegroundProgram != null)
                 {
-                    NixStream input = (NixStream)ForegroundProgram.StdIn;
+                    NixStream input = ForegroundProgram.StdIn as NixStream;
                     if (input != null)
                     {
                         return input.EchoStream;

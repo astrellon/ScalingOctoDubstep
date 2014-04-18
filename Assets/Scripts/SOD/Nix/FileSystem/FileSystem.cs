@@ -13,9 +13,12 @@ namespace SOD
             {
 
                 public string RootFolder = "";
+                public byte []SymlinkHeader = null;
                 public FileSystem()
                 {
-
+                    SymlinkHeader = System.Text.Encoding.ASCII.GetBytes("!<symlink>  ");
+                    SymlinkHeader[10] = 0xFF;
+                    SymlinkHeader[11] = 0xFE;
                 }
 
                 public FileNode[] ListFiles(string path)
@@ -42,6 +45,10 @@ namespace SOD
                     }
                     return RootFolder + "/" + path.ToString();
                 }
+                public string GetPathTo(NixPath path)
+                {
+                    return GetPathTo(path.ToString());
+                }
                 public bool IsDirectoryEmpty(string path)
                 {
                     string tpath = GetPathTo(path);
@@ -63,7 +70,7 @@ namespace SOD
                 }
                 public bool IsDirectory(NixPath path)
                 {
-                    string tpath = GetPathTo(path.ToString());
+                    string tpath = GetPathTo(path);
                     return Directory.Exists(tpath);
                 }
                 public bool IsFile(string path)
@@ -73,7 +80,7 @@ namespace SOD
                 }
                 public bool IsFile(NixPath path)
                 {
-                    string tpath = GetPathTo(path.ToString());
+                    string tpath = GetPathTo(path);
                     return File.Exists(tpath);
                 }
                 public bool IsFileOrDirectory(string path)
@@ -83,7 +90,7 @@ namespace SOD
                 }
                 public bool IsFileOrDirectory(NixPath path)
                 {
-                    string tpath = GetPathTo(path.ToString());
+                    string tpath = GetPathTo(path);
                     return File.Exists(tpath) || Directory.Exists(tpath);
                 }
 
@@ -100,7 +107,7 @@ namespace SOD
                     }
                     try
                     {
-                        File.Copy(GetPathTo(fromPath.ToString()), GetPathTo(toPath.ToString()));
+                        File.Copy(GetPathTo(fromPath), GetPathTo(toPath));
                     }
                     catch (Exception exp)
                     {
@@ -117,12 +124,12 @@ namespace SOD
                     {
                         NixPath newPath = new NixPath(toPath.ToString());
                         newPath.AppendPath(fromPath.TopPath());
-                        File.Move(GetPathTo(fromPath.ToString()), GetPathTo(newPath.ToString()));
+                        File.Move(GetPathTo(fromPath), GetPathTo(newPath));
                         return;
                     }
                     try
                     {
-                        File.Move(GetPathTo(fromPath.ToString()), GetPathTo(toPath.ToString()));
+                        File.Move(GetPathTo(fromPath), GetPathTo(toPath));
                     }
                     catch (Exception exp)
                     {
@@ -132,7 +139,7 @@ namespace SOD
 
                 public void MakeDirectory(NixPath path, bool createParents)
                 {
-                    string pathStr = GetPathTo(path.ToString());
+                    string pathStr = GetPathTo(path);
                     Debug.Log("Makedir str: " + pathStr);
                     if (createParents)
                     {
@@ -160,7 +167,40 @@ namespace SOD
                 }
                 public void DeleteFile(NixPath path)
                 {
-                    File.Delete(GetPathTo(path.ToString()));
+                    File.Delete(GetPathTo(path));
+                }
+                public NixPath GetLink(NixPath path)
+                {
+                    FileStream stream = File.OpenRead(GetPathTo(path));
+                    byte []symcheck = new byte[SymlinkHeader.Length];
+                    int read = stream.Read(symcheck, 0, symcheck.Length);
+                    if (read != symcheck.Length)
+                    {
+                        return null;
+                    }
+                    for (int i = 0; i < SymlinkHeader.Length; i++)
+                    {
+                        if (symcheck[i] != SymlinkHeader[i])
+                        {
+                            return null;
+                        }
+                    }
+                    long remaining = stream.Length - symcheck.Length;
+                    byte []pathBytes = new byte[remaining];
+                    stream.Read(pathBytes, 0, (int)remaining); 
+                    string pathStr = System.Text.Encoding.UTF8.GetString(pathBytes); 
+                    return new NixPath(pathStr);
+                }
+                public NixPath FollowLinks(NixPath path)
+                {
+                    NixPath parent = path;
+                    NixPath link = GetLink(path);
+                    while (link != null)
+                    {
+                        parent = link;
+                        link = GetLink(link);
+                    }
+                    return parent;
                 }
             }
         }

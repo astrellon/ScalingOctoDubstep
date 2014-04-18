@@ -76,6 +76,15 @@ namespace SOD
                     MainThread = new System.Threading.Thread(Run);
                 }
 
+                public NixPath OpenPath(NixPath path)
+                {
+                    return MainSystem.RootDrive.FollowLinks(MainSession.WorkingDirectory.Combine(path));
+                }
+                public NixPath OpenPath(string path)
+                {
+                    return MainSystem.RootDrive.FollowLinks(MainSession.WorkingDirectory.Combine(new NixPath(path)));
+                }
+
                 public void PushEvent(ProgramEvent e)
                 {
                     lock (Events)

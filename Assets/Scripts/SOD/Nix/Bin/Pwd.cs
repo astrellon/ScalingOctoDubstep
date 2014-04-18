@@ -22,6 +22,8 @@ namespace SOD
                 }
                 protected override void Run()
                 {
+                    for (int i = 1; i < Argv.Count; i++) {
+                    }
                     string pwd = "No session";
                     if (MainSession != null && MainSession.WorkingDirectory != null)
                     {

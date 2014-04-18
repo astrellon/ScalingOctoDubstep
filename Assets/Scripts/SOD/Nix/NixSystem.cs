@@ -63,6 +63,7 @@ namespace SOD
                 BaseSession = new Session();
                 Shell = new Bin.Bash(NewPid());
                 BaseSession.Shell = Shell;
+                BaseSession.MainSystem = this;
 
                 Terminal term = GetComponent<Terminal>();
                 if (term != null)
@@ -101,6 +102,10 @@ namespace SOD
                 Shell.StdOut.WriteLine("Booting Complete...");
 
                 Shell.ExecuteAsync(this, BaseSession, new string[] { "" });
+
+                NixPath link = RootDrive.FollowLinks(new NixPath("/link"));
+                Debug.Log("LINK: " + link.ToString());
+
                 return true;
             }
 

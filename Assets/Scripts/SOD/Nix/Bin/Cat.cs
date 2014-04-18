@@ -30,7 +30,8 @@ namespace SOD
                     {
                         for (int i = 1; i < Argv.Count; i++)
                         {
-                            NixPath path = MainSession.WorkingDirectory.Combine(Argv[i]);
+                            NixPath path = OpenPath(Argv[i]);
+                            //NixPath path = MainSystem.RootDrive.FollowLinks(MainSession.WorkingDirectory.Combine(Argv[i]));
                             if (MainSystem.RootDrive.IsFileOrDirectory(path))
                             {
                                 FileStream file = File.OpenRead(MainSystem.RootDrive.GetPathTo(path.ToString()));

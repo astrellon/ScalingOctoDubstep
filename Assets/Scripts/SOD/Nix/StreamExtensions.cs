@@ -12,7 +12,7 @@ namespace SOD
             }
             public static void Write(this System.IO.Stream stream, string buffer)
             {
-                NixStream nixStream = (NixStream)stream;
+                NixStream nixStream = stream as NixStream;
                 if (nixStream != null)
                 {
                     nixStream.WriteString(buffer);
@@ -23,7 +23,7 @@ namespace SOD
             }
             public static void WriteLine(this System.IO.Stream stream, string buffer)
             {
-                NixStream nixStream = (NixStream)stream;
+                NixStream nixStream = stream as NixStream;
                 if (nixStream != null)
                 {
                     nixStream.WriteStringLine(buffer);
@@ -35,7 +35,7 @@ namespace SOD
 
             public static int Read(this System.IO.Stream stream, ref string buffer, int maxRead = -1)
             {
-                NixStream nixStream = (NixStream)stream;
+                NixStream nixStream = stream as NixStream;
                 if (nixStream != null)
                 {
                     return nixStream.ReadString(ref buffer, maxRead);
@@ -55,7 +55,7 @@ namespace SOD
 
             public static bool GetEchoStream(this System.IO.Stream stream)
             {
-                NixStream nixStream = (NixStream)stream;
+                NixStream nixStream = stream as NixStream;
                 if (nixStream != null)
                 {
                     return nixStream.EchoStream;
@@ -64,7 +64,7 @@ namespace SOD
             }
             public static void SetEchoStream(this System.IO.Stream stream, bool value)
             {
-                NixStream nixStream = (NixStream)stream;
+                NixStream nixStream = stream as NixStream;
                 if (nixStream != null)
                 {
                     nixStream.EchoStream = value;
