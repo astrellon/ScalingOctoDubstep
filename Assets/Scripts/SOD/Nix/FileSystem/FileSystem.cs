@@ -23,7 +23,8 @@ namespace SOD
 
                 public FileNode[] ListFiles(string path)
                 {
-                    string tpath = GetPathTo(path);
+                    NixPath nixPath = new NixPath(path);
+                    string tpath = GetPathTo(nixPath);
                     if (!Directory.Exists(tpath))
                     {
                         return null;
@@ -32,7 +33,14 @@ namespace SOD
                     FileNode[] result = new FileNode[entries.Length];
                     for (int i = 0; i < entries.Length; i++)
                     {
+                        try{
                         result[i] = new FileNode(entries[i]);
+                        result[i].Symlink = GetLink(entries[i]);
+                        }
+                        catch (Exception x)
+                        {
+                            Debug.Log("Exception: " + x.Message);
+                        }
                     }
                     return result;
                 }
@@ -41,13 +49,13 @@ namespace SOD
                     NixPath path = new NixPath(relative);
                     if (path.Absolute)
                     {
-                        return RootFolder + path.ToString();
+                        return RootFolder + path.ToString(true);
                     }
-                    return RootFolder + "/" + path.ToString();
+                    return RootFolder + "\\" + path.ToString(true);
                 }
                 public string GetPathTo(NixPath path)
                 {
-                    return GetPathTo(path.ToString());
+                    return GetPathTo(path.ToString(true));
                 }
                 public bool IsDirectoryEmpty(string path)
                 {
@@ -173,11 +181,15 @@ namespace SOD
                 {
                     File.Delete(GetPathTo(path));
                 }
-                public NixPath GetLink(NixPath path)
+                public NixPath GetLink(string fullPath)
                 {
 					try
                     {
-                        FileStream stream = File.OpenRead(GetPathTo(path));
+                        if (!File.Exists(fullPath))
+                        {
+                            return null;
+                        }
+                        FileStream stream = File.OpenRead(fullPath);
                         byte []symcheck = new byte[SymlinkHeader.Length];
                         int read = stream.Read(symcheck, 0, symcheck.Length);
                         if (read != symcheck.Length)
@@ -202,6 +214,11 @@ namespace SOD
                         Debug.Log("Error following link: " + exp.Message);
                     }
 					return null;
+
+                }
+                public NixPath GetLink(NixPath path)
+                {
+                    return GetLink(GetPathTo(path));
                 }
                 public NixPath FollowLinks(NixPath path)
                 {

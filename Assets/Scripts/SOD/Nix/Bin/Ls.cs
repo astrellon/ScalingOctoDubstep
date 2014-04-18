@@ -35,10 +35,18 @@ namespace SOD
                         for (int i = 0; i < files.Length; i++)
                         {
                             FileInfo info = files[i].Info;
+                            if (files[i].Symlink != null) 
+                            {
+                                StdOut.Write("@");
+                            }
                             StdOut.Write(info.Name);
                             if ((info.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
                             {
                                 StdOut.Write("/");
+                            }
+                            if (files[i].Symlink != null)
+                            {
+                                StdOut.Write(" -> " + files[i].Symlink.ToString());
                             }
                             StdOut.Write("\n");
                         }
