@@ -33,16 +33,60 @@ namespace SOD
                     MainSession.Shell.Execute(line);
                     return 0;
                 }
+                public Stream OpenFileHandler(string filename, FileMode mode, FileAccess access)
+                {
+                    NixPath path = OpenPath(filename);
+                    return new FileStream(MainSystem.RootDrive.GetPathTo(path), mode, access);
+                }
+                public int RemoveFileHandler(string filename)
+                {
+                    NixPath path = MainSession.PhysicalDirectory.Combine(new NixPath(filename));
+                    try
+                    {
+                        if (MainSystem.RootDrive.IsDirectory(path))
+                        {
+                            MainSystem.RootDrive.DeleteDirectory(path, false);
+                        }
+                        else
+                        {
+                            MainSystem.RootDrive.DeleteFile(path);
+                        }
+                    }
+                    catch (Exception exp)
+                    {
+                        Debug.Log("Error removing file from Lua: " + exp.Message);
+                        return -1;
+                    }
+                    return 0;
+                }
+                public int RenameFileHandler(string fromname, string toname)
+                {
+                    NixPath frompath = MainSession.PhysicalDirectory.Combine(new NixPath(fromname));
+                    NixPath topath = MainSession.PhysicalDirectory.Combine(new NixPath(toname));
+                    try
+                    {
+                        MainSystem.RootDrive.Rename(frompath, topath);
+                    }
+                    catch (Exception exp)
+                    {
+                        Debug.Log("Error renaming file from Lua: " + exp.Message);
+                        return -1;
+                    }
+                    return 0;
+                }
+                public string GetTempFilenameHandler()
+                {
+                    string tmpFolder = MainSession.GetEnvValue("TMPDIR", "/tmp");
+                    return tmpFolder + "/" + System.Guid.NewGuid().ToString();
+                }
                 protected override void Run()
                 {
                     Lua.LuaOptions opts = new Lua.LuaOptions();
                     opts.StdOut = StdOut;
                     opts.StdIn = StdIn;
                     opts.StdErr = StdErr;
-                    opts.RootFolder = MainSystem.RootDrive.RootFolder + "\\";
                     opts.ExecuteHandler = ExecuteHandler;
                     Lua l = new Lua(opts);
-                    l.SetWorkingDirectory(MainSession.PhysicalDirectory.ToString());
                     try
                     {
                         if (Argv.Count > 1 || PathToLua.Length > 0)

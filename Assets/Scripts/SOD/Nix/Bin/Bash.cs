@@ -19,6 +19,7 @@ namespace SOD
                 public List<string> History { get; private set; }
                 public int HistoryPosition { get; private set; }
                 public string InputBuffer { get; private set; }
+                public int Cursor { get; private set; }
                 public Regex Parser { get; private set; }
 
                 public Bash(int pid)
@@ -27,6 +28,7 @@ namespace SOD
                     History = new List<string>();
                     InputBuffer = "";
                     HistoryPosition = -1;
+                    Cursor = 0;
 
                     Parser = new Regex("(\\$[a-zA-Z][a-zA-Z0-9]*)|([\\<\\>\\|])|([^\\$\\<\\>\\|]+)");
                 }
@@ -332,6 +334,11 @@ namespace SOD
                         }
                     }
                 }
+                protected void SetInputBuffer(string buffer)
+                {
+                    InputBuffer = buffer;
+                    Cursor = buffer.Length;
+                }
                 protected void ProcessKeyboardEvent(Program.KeyboardEvent keyEvent)
                 {
                     char c = keyEvent.Character;
@@ -348,15 +355,26 @@ namespace SOD
                             HistoryPosition = History.Count;
                             Execute(InputBuffer);
                             BeginInput();
-                            InputBuffer = "";
+                            SetInputBuffer("");
+                            Cursor = 0;
                         }
                         else if (c == '\t')
                         {
-                            InputBuffer = AutocompleteInput(InputBuffer, InputBuffer.Length - 1);
+                            //InputBuffer = AutocompleteInput(InputBuffer, InputBuffer.Length - 1);
+                            SetInputBuffer(AutocompleteInput(InputBuffer, Cursor));
+                            Cursor = InputBuffer.Length;
                         }
                         else
                         {
+                            try{
+                            InputBuffer = InputBuffer.Insert(Cursor, c.ToString());
+                            }
+                            catch (Exception exp) {
                             InputBuffer += c;
+                            Debug.Log("Cursor insert: " + Cursor + " : "  + exp.Message);
+                            }
+
+                            Cursor++;
                         }
                         WriteInputBuffer();
                     }
@@ -365,16 +383,41 @@ namespace SOD
                     {
                         if (InputBuffer.Length > 0)
                         {
-                            InputBuffer = InputBuffer.Remove(InputBuffer.Length - 1);
+                            if (Cursor > 0) 
+                            {
+                                InputBuffer = InputBuffer.Remove(Cursor - 1, 1);
+                                Cursor--;
+                            }
                             WriteInputBuffer();
                         }
+                    }
+                    else if (keyEvent.KeyCode == 127)
+                    {
+                        if (InputBuffer.Length > 0)
+                        {
+                            if (Cursor < InputBuffer.Length)
+                            {
+                                InputBuffer = InputBuffer.Remove(Cursor, 1);
+                            }
+                            WriteInputBuffer();
+                        }
+                    }
+                    else if (keyEvent.KeyCode == 279)
+                    {
+                        Cursor = InputBuffer.Length;
+                        UpdateCursor();
+                    }
+                    else if (keyEvent.KeyCode == 278)
+                    {
+                        Cursor = 0;
+                        UpdateCursor();
                     }
                     else if (keyEvent.KeyCode == 274)
                     {
                         Debug.Log("History: " + HistoryPosition + ", " + History.Count);
                         if (HistoryPosition >= History.Count - 1)
                         {
-                            InputBuffer = "";
+                            SetInputBuffer("");
                             HistoryPosition = History.Count - 1;
                             Debug.Log("Writing empty buffer");
                             WriteInputBuffer();
@@ -385,7 +428,7 @@ namespace SOD
                         {
                             return;
                         }
-                        InputBuffer = History[++HistoryPosition];
+                        SetInputBuffer(History[++HistoryPosition]);
                         WriteInputBuffer();
                     }
                     else if (keyEvent.KeyCode == 273)
@@ -398,13 +441,32 @@ namespace SOD
                         {
                             return;
                         }
-                        InputBuffer = History[HistoryPosition--];
+                        SetInputBuffer(History[HistoryPosition--]);
                         if (HistoryPosition < 0)
                         {
                             HistoryPosition = 0;
                         }
                         WriteInputBuffer();
                     }
+                    // Left
+                    else if (keyEvent.KeyCode == 276)
+                    {
+                        if (Cursor > 0)
+                        {
+                            Cursor--;
+                        }
+                        UpdateCursor();
+                    }
+                    // Right
+                    else if (keyEvent.KeyCode == 275)
+                    {
+                        if (Cursor < InputBuffer.Length)
+                        {
+                            Cursor++;
+                        }
+                        UpdateCursor();
+                    }
+                    Debug.Log("Keycode: " + keyEvent.KeyCode);
                 }
                 protected override void Run()
                 {
@@ -429,11 +491,14 @@ namespace SOD
                 }
                 protected void WriteInputBuffer()
                 {
-                    StdOut.Write(0x1b);
-                    StdOut.Write("[u");
+                    StdOut.Write("\x1b[u");
                     StdOut.Write(InputBuffer);
-                    StdOut.Write(0x1b);
-                    StdOut.Write("[K");
+                    StdOut.Write("\x1b[K");
+                    UpdateCursor();
+                }
+                protected void UpdateCursor()
+                {
+                    StdOut.Write("\x1b[u\x1b[" + Cursor + "C");
                 }
             }
 

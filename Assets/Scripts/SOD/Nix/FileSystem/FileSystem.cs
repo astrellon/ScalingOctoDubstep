@@ -181,6 +181,11 @@ namespace SOD
                 {
                     File.Delete(GetPathTo(path));
                 }
+
+                public void Rename(NixPath frompath, NixPath topath)
+                {
+                    File.Move(GetPathTo(frompath), GetPathTo(topath));
+                }
                 public NixPath GetLink(string fullPath)
                 {
 					try

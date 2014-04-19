@@ -44,9 +44,6 @@ namespace SOD
 
             public void Start()
             {
-                Width = 80;
-                Height = 16;
-                MaxHeight = 20;
                 CursorX = 0;
                 CursorY = 0;
                 ScrollX = 0;
@@ -514,10 +511,16 @@ namespace SOD
                         }
                     }
                 }
+                Vector2 sizeOfCharacter = style.CalcSize(new GUIContent("M"));
+                Vector2 kerningCheck = style.CalcSize(new GUIContent("MM"));
+                float charWidth = kerningCheck.x - sizeOfCharacter.x;
                 int max = Mathf.Min(Buffer.Count, Height + ScrollY);
                 string text = GetGUIString(max);
                 if (DisplayOntoGui)
                 {
+                    float x = charWidth * (CursorX);
+                    float y = sizeOfCharacter.y * (CursorY);
+                    GUI.Label(new Rect(x, y, sizeOfCharacter.x, sizeOfCharacter.y), "<color=white>|</color>", style);
                     GUI.Label(new Rect(0, 0, Screen.width, Screen.height), text, style);
                 }
                 else if (textMesh != null)
