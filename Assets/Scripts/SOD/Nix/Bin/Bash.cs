@@ -116,79 +116,87 @@ namespace SOD
                 }
                 protected string AutocompleteInput(string input, int cursor)
                 {
-                    string result = "";
-                    string substr = "";
-                    int startPos = 0;
-                    int endPos = input.Length;
-                    for (int i = cursor; i >= 0; i--)
-                    {
-                        char c = input[i];
-                        if (c == ' ' || c == '\t')
-                        {
-                            startPos = i + 1;
-                            break;
-                        }
-                    }
-                    for (int i = cursor; i < input.Length; i++)
-                    {
-                        char c = input[i];
-                        if (c == ' ' || c == '\t')
-                        {
-                            endPos = i;
-                            break;
-                        }
-                    }
+					try
+					{
+	                    string result = "";
+	                    string substr = "";
+	                    int startPos = 0;
+	                    int endPos = input.Length;
+	                    for (int i = cursor; i >= 0; i--)
+	                    {
+	                        char c = input[i];
+	                        if (c == ' ' || c == '\t')
+	                        {
+	                            startPos = i + 1;
+	                            break;
+	                        }
+	                    }
+	                    for (int i = cursor; i < input.Length; i++)
+	                    {
+	                        char c = input[i];
+	                        if (c == ' ' || c == '\t')
+	                        {
+	                            endPos = i;
+	                            break;
+	                        }
+	                    }
 
-                    if (startPos >= endPos)
-                    {
-                        return input;
-                    }
+	                    if (startPos >= endPos)
+	                    {
+	                        return input;
+	                    }
 
-                    if (startPos > 0)
-                    {
-                        result = input.Substring(0, startPos);
-                    }
+	                    if (startPos > 0)
+	                    {
+	                        result = input.Substring(0, startPos);
+	                    }
 
-                    string strToComplete = input.Substring(startPos, endPos - startPos);
-                    if (strToComplete[0] == '$')
-                    {
-                        List<string> matches = CheckEnvVariable(strToComplete, false);
-                        if (matches.Count == 1)
-                        {
-                            strToComplete = matches[0];
-                        }
-                    }
-                    else
-                    {
-                        List<string> matches = CheckBinProgram(strToComplete, false);
-                        if (matches.Count == 1)
-                        {
-                            strToComplete = matches[0];
-                        }
-                        else if (matches.Count == 0)
-                        {
-                            try
-                            {
-                                matches = CheckFiles(strToComplete, false);
-                                if (matches.Count == 1)
-                                {
-                                    strToComplete = matches[0];
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                Debug.Log("EXCEP: " + ex.Message + "\n" + ex.StackTrace);
-                            }
-                        }
-                    }
+	                    string strToComplete = input.Substring(startPos, endPos - startPos);
+	                    if (strToComplete[0] == '$')
+	                    {
+	                        List<string> matches = CheckEnvVariable(strToComplete, false);
+	                        if (matches.Count == 1)
+	                        {
+	                            strToComplete = matches[0];
+	                        }
+	                    }
+	                    else
+	                    {
+	                        List<string> matches = CheckBinProgram(strToComplete, false);
+	                        if (matches.Count == 1)
+	                        {
+	                            strToComplete = matches[0];
+	                        }
+	                        else if (matches.Count == 0)
+	                        {
+	                            try
+	                            {
+	                                matches = CheckFiles(strToComplete, false);
+	                                if (matches.Count == 1)
+	                                {
+	                                    strToComplete = matches[0];
+	                                }
+	                            }
+	                            catch (Exception ex)
+	                            {
+	                                Debug.Log("EXCEP: " + ex.Message + "\n" + ex.StackTrace);
+	                            }
+	                        }
+	                    }
 
-                    result += strToComplete;
-                    if (endPos < input.Length)
-                    {
-                        result += input.Substring(endPos);
-                    }
+	                    result += strToComplete;
+	                    if (endPos < input.Length)
+	                    {
+	                        result += input.Substring(endPos);
+	                    }
 
-                    return result;
+	                    return result;
+					}
+					catch (Exception exp)
+					{
+						Debug.Log ("Error autocompleting: " + exp.Message + "\n" + exp.StackTrace);
+					}
+					return input;
                 }
                 protected List<string> CheckEnvVariable(string input, bool onlyOne)
                 {
@@ -253,7 +261,13 @@ namespace SOD
                         baseinput = input.Substring(0, index);
                     }
 
+					if (input[0] == '/')
+					{
+						baseinput = "/" + baseinput;
+					}
                     NixPath combined = OpenPath(baseinput);
+
+					Debug.Log ("Combined: " + combined.ToString() + " | " + input + " | " + filename + " | " + baseinput);
                     if (MainSystem.RootDrive.IsDirectory(combined))
                     {
                         FileNode[] files = MainSystem.RootDrive.ListFiles(combined.ToString());
@@ -265,11 +279,18 @@ namespace SOD
                                 if (info.Name.IndexOf(filename) == 0)
                                 {
                                     string entry = info.Name;
-
+									//Debug.Log ("FOUND: " + baseinput + " | " + entry);
                                     if (baseinput.Length > 0)
                                     {
-                                        entry = baseinput + "/" + entry;
+										entry = baseinput + "/" + entry;
+										/*if (baseinput[0] != '/') {
+                                        	entry = baseinput + "/" + entry;
+										}
+										else {*/
+											//entry = "/" + entry;
+										//}
                                     }
+                                    
                                     if (info.Attributes == FileAttributes.Directory)
                                     {
                                         result.Add(entry + "/");
@@ -361,7 +382,7 @@ namespace SOD
                         else if (c == '\t')
                         {
                             //InputBuffer = AutocompleteInput(InputBuffer, InputBuffer.Length - 1);
-                            SetInputBuffer(AutocompleteInput(InputBuffer, Cursor));
+                            SetInputBuffer(AutocompleteInput(InputBuffer, Cursor - 1));
                             Cursor = InputBuffer.Length;
                         }
                         else

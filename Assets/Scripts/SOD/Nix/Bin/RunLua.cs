@@ -13,16 +13,10 @@ namespace SOD
             public class RunLua : Program
             {
 
-                private string PathToLua = "";
                 public RunLua(int pid)
                     : base(pid)
                 {
 
-                }
-                public RunLua(int pid, string pathToLua)
-                    : base(pid)
-                {
-                    PathToLua = pathToLua;
                 }
                 public override string GetCommand()
                 {
@@ -35,7 +29,9 @@ namespace SOD
                 }
                 public Stream OpenFileHandler(string filename, FileMode mode, FileAccess access)
                 {
+					Debug.Log ("ASD");
                     NixPath path = OpenPath(filename);
+                    Debug.Log("Attempting to opening Lua file: " + path.ToString());
                     return new FileStream(MainSystem.RootDrive.GetPathTo(path), mode, access);
                 }
                 public int RemoveFileHandler(string filename)
@@ -86,26 +82,23 @@ namespace SOD
                     opts.StdIn = StdIn;
                     opts.StdErr = StdErr;
                     opts.ExecuteHandler = ExecuteHandler;
+					opts.OpenFileHandler = OpenFileHandler;
+					opts.RenameFileHandler = RenameFileHandler;
+					opts.RemoveFileHandler = RemoveFileHandler;
+					opts.GetTempFilenameHandler = GetTempFilenameHandler;
                     Lua l = new Lua(opts);
                     try
                     {
-                        if (Argv.Count > 1 || PathToLua.Length > 0)
+                        if (Argv.Count > 1)
                         {
-                            NixPath newPath;
-                            if (PathToLua.Length > 0)
-                            {
-                                newPath = new NixPath(PathToLua);
-                            }
-                            else
-                            {
-                                newPath = MainSession.WorkingDirectory.Combine(Argv[1]);
-                            }
+                            NixPath newPath = OpenPath(Argv[1]);
                             string file = MainSystem.RootDrive.GetPathTo(newPath.ToString());
-                            Debug.Log("File to load: " + file);
+                            Debug.Log("File to load: " + newPath.ToString());
                             if (File.Exists(file))
                             {
                                 string argStr = "arg={}\n";
-                                for (int i = 1; i < Argv.Count; i++)
+								argStr += "arg[0]=\"" + Argv[1].Replace ("\\", "/") + "\"\n";
+                                for (int i = 2; i < Argv.Count; i++)
                                 {
                                     argStr += "arg[" + (i - 1) + "]=\"" + Argv[i] + "\"\n";
                                 }
@@ -115,7 +108,7 @@ namespace SOD
                             }
                             else
                             {
-                                StdOut.WriteLine("Unable to find file: " + Argv[0]);
+                                StdOut.WriteLine("Unable to find file: " + Argv[1]);
                             }
                         }
                         else

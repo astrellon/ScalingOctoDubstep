@@ -231,6 +231,10 @@ namespace SOD
                         return path;
                     }
                     NixPath build = new NixPath();
+                    if (path.Absolute)
+                    {
+                        build.Absolute = true;
+                    }
                     for (int i = 0; i < path.Path.Count; i++)
                     {
                         build.AppendPath(path.Path[i]);

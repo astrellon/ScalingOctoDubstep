@@ -518,8 +518,8 @@ namespace SOD
                 string text = GetGUIString(max);
                 if (DisplayOntoGui)
                 {
-                    float x = charWidth * (CursorX);
-                    float y = sizeOfCharacter.y * (CursorY);
+                    float x = charWidth * (CursorX - ScrollX);
+                    float y = sizeOfCharacter.y * (CursorY - ScrollY);
                     GUI.Label(new Rect(x, y, sizeOfCharacter.x, sizeOfCharacter.y), "<color=white>|</color>", style);
                     GUI.Label(new Rect(0, 0, Screen.width, Screen.height), text, style);
                 }

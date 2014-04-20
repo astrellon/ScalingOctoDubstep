@@ -42,9 +42,9 @@ namespace SOD
 
                 ActiveStack = new Stack<Bin.Program>();
                 EnvironmentVariables = new Dictionary<string, string>();
-                EnvironmentVariables["HOSTNAME"] = "unknown_host";
-                EnvironmentVariables["USER"] = "alan";
-                EnvironmentVariables["HOSTTYPE"] = "magic";
+                EnvironmentVariables["HOSTNAME"] = "engineering_comp";
+                EnvironmentVariables["USER"] = "astrellon";
+                EnvironmentVariables["HOSTTYPE"] = "spaceship";
                 EnvironmentVariables["PWD"] = WorkingDirectory.ToString();
                 EnvironmentVariables["PS1"] = @"\[\033[1;32m\]$USER@$HOSTNAME\[\033[0m\]:\[\033[1;34m\]$PWD\[\033[0m\]- ";
                 EnvironmentVariables["PATH"] = @"/usr/bin";
