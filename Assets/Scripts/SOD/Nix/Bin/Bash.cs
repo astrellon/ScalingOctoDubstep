@@ -487,7 +487,6 @@ namespace SOD
                         }
                         UpdateCursor();
                     }
-                    Debug.Log("Keycode: " + keyEvent.KeyCode);
                 }
                 protected override void Run()
                 {

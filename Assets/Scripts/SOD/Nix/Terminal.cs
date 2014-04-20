@@ -86,6 +86,10 @@ namespace SOD
             }
             public void Write(byte data)
             {
+				if (data == '\r')
+				{
+					return;
+				}
                 if (CommandSequence != null)
                 {
                     ParseCommand(data);
