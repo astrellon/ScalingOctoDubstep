@@ -104,11 +104,6 @@ namespace SOD
 
                 Shell.ExecuteAsync(this, BaseSession, new string[] { "" });
 
-                
-                NixPath link = RootDrive.FollowLinks(new NixPath("/melli/docs"));
-                Debug.Log("LINK: " + link.ToString());
-                
-
                 return true;
             }
 
