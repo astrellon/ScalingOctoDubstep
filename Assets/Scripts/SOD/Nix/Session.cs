@@ -8,6 +8,14 @@ namespace SOD
     {
         public class Session
         {
+            public static Session BaseSession = null;
+            public static System.IO.Stream BaseStdOut
+            {
+                get
+                {
+                    return BaseSession.Shell.StdOut;
+                }
+            }
 
             public string User { get; set; }
             public NixPath WorkingDirectory { get; private set; }
@@ -35,6 +43,8 @@ namespace SOD
 
             public Session()
             {
+                BaseSession = this;
+
                 WorkingDirectory = new NixPath();
                 WorkingDirectory.Absolute = true;
                 PhysicalDirectory = new NixPath();
@@ -45,10 +55,12 @@ namespace SOD
                 EnvironmentVariables["HOSTNAME"] = "engineering_comp";
                 EnvironmentVariables["USER"] = "astrellon";
                 EnvironmentVariables["HOSTTYPE"] = "spaceship";
-                EnvironmentVariables["PWD"] = WorkingDirectory.ToString();
+                //EnvironmentVariables["PWD"] = WorkingDirectory.ToString();
+                EnvironmentVariables["PWD"] = "/";
                 EnvironmentVariables["PS1"] = @"\[\033[1;32m\]$USER@$HOSTNAME\[\033[0m\]:\[\033[1;34m\]$PWD\[\033[0m\]- ";
                 EnvironmentVariables["PATH"] = @"/usr/bin";
                 EnvironmentVariables["TMPDIR"] = @"/tmp";
+
             }
 
             public void SetWorkingDirectory(NixPath path)

@@ -23,8 +23,11 @@ namespace SOD
 
                 public FileNode[] ListFiles(string path)
                 {
-                    NixPath nixPath = new NixPath(path);
-                    string tpath = GetPathTo(nixPath);
+                    return ListFiles(new NixPath(path));
+                }
+                public FileNode[] ListFiles(NixPath path)
+                {
+                    string tpath = GetPathTo(path);
                     if (!Directory.Exists(tpath))
                     {
                         return null;
@@ -46,16 +49,23 @@ namespace SOD
                 }
                 public string GetPathTo(string relative)
                 {
-                    NixPath path = new NixPath(relative);
-                    if (path.Absolute)
-                    {
-                        return RootFolder + path.ToString(true);
-                    }
-                    return RootFolder + "\\" + path.ToString(true);
+                    return GetPathTo(new NixPath(relative));
                 }
                 public string GetPathTo(NixPath path)
                 {
-                    return GetPathTo(path.ToString(true));
+                    try
+                    {
+                        if (path.Absolute)
+                        {
+                            return RootFolder + path.BuildString(true, true);
+                        }
+                        return RootFolder + "\\" + path.BuildString(true, true);
+                    }
+                    catch (Exception exp)
+                    {
+                        Debug.Log("Error getting path: " + exp.Message);
+                        return "err";
+                    }
                 }
                 public bool IsDirectoryEmpty(string path)
                 {
@@ -227,7 +237,8 @@ namespace SOD
                 }
                 public NixPath FollowLinks(NixPath path)
                 {
-                    if (path.Path.Count == 0) {
+                    if (path.Path.Count == 0) 
+                    {
                         return path;
                     }
                     NixPath build = new NixPath();
@@ -237,6 +248,11 @@ namespace SOD
                     }
                     for (int i = 0; i < path.Path.Count; i++)
                     {
+                        if (path.Path[i] == "..") 
+                        {
+                            build.PopPath();
+                            continue;
+                        }
                         build.AppendPath(path.Path[i]);
                         if (IsDirectory(build))
                         {

@@ -29,7 +29,7 @@ namespace SOD
                         newPath = OpenPath(Argv[1]);
                     }
 
-                    FileNode[] files = MainSystem.RootDrive.ListFiles(newPath.ToString());
+                    SOD.Nix.FileSystem.FileNode[] files = MainSystem.RootDrive.ListFiles(newPath.ToString());
                     if (files != null)
                     {
                         for (int i = 0; i < files.Length; i++)

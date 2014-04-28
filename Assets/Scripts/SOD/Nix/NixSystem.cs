@@ -43,6 +43,9 @@ namespace SOD
 
             public void Start()
             {
+                BaseSession = new Session();
+                Session.BaseSession = BaseSession;
+
                 RootDrive = new FileSystem.FileSystem();
                 RootDrive.RootFolder = Path.Combine(Directory.GetCurrentDirectory(), "root");
                 Directory.CreateDirectory(RootDrive.RootFolder);
@@ -61,7 +64,7 @@ namespace SOD
                 AddProgram("mv", typeof(Bin.Mv));
                 AddProgram("rm", typeof(Bin.Rm));
                 AddProgram("ln", typeof(Bin.Ln));
-                BaseSession = new Session();
+
                 Shell = new Bin.Bash(NewPid());
                 BaseSession.Shell = Shell;
                 BaseSession.MainSystem = this;

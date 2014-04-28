@@ -252,25 +252,15 @@ namespace SOD
                     {
                         return result;
                     }
-                    int index = input.LastIndexOf('/');
-                    string filename = input;
-                    string baseinput = "";
-                    if (index >= 0)
-                    {
-                        filename = input.Substring(index + 1);
-                        baseinput = input.Substring(0, index);
-                    }
 
-					if (input[0] == '/')
-					{
-						baseinput = "/" + baseinput;
-					}
-                    NixPath combined = OpenPath(baseinput);
+                    NixPath toCheck = new NixPath(input);
+                    string filename = toCheck.PopPath(); 
+                    NixPath toCheckFull = OpenPath(toCheck);
 
-					Debug.Log ("Combined: " + combined.ToString() + " | " + input + " | " + filename + " | " + baseinput);
-                    if (MainSystem.RootDrive.IsDirectory(combined))
+                    //Debug.Log("To check: " + toCheck.ToString() + " | " + toCheckFull.ToString() + " | " + filename);
+                    if (MainSystem.RootDrive.IsDirectory(toCheck))
                     {
-                        FileNode[] files = MainSystem.RootDrive.ListFiles(combined.ToString());
+                        SOD.Nix.FileSystem.FileNode[] files = MainSystem.RootDrive.ListFiles(toCheckFull);
                         if (files != null)
                         {
                             for (int i = 0; i < files.Length; i++)
@@ -279,25 +269,16 @@ namespace SOD
                                 if (info.Name.IndexOf(filename) == 0)
                                 {
                                     string entry = info.Name;
-									//Debug.Log ("FOUND: " + baseinput + " | " + entry);
-                                    if (baseinput.Length > 0)
-                                    {
-										entry = baseinput + "/" + entry;
-										/*if (baseinput[0] != '/') {
-                                        	entry = baseinput + "/" + entry;
-										}
-										else {*/
-											//entry = "/" + entry;
-										//}
-                                    }
+                                    NixPath entryPath = new NixPath(toCheck);
+                                    entryPath.AppendPath(entry);
                                     
                                     if (info.Attributes == FileAttributes.Directory)
                                     {
-                                        result.Add(entry + "/");
+                                        result.Add(entryPath.ToString() + "/");
                                     }
                                     else
                                     {
-                                        result.Add(entry);
+                                        result.Add(entryPath.ToString());
                                     }
                                 }
                             }

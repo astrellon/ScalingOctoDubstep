@@ -27,11 +27,11 @@ namespace SOD
                         StdOut.WriteLine("Need help");
                         return;
                     }
+                    try{
 
-                    //NixPath newPath = MainSession.WorkingDirectory.Combine(Argv[1]);
-                    NixPath newPath = MainSession.WorkingDirectory.Combine(Argv[1]);
+                    NixPath newPath = MainSession.WorkingDirectory.Combine(Argv[1]).ResolvePath();
                     NixPath followedPath = MainSystem.RootDrive.FollowLinks(MainSession.PhysicalDirectory.Combine(Argv[1]));
-                    Debug.Log("Followed path: " + followedPath.ToString());
+
                     if (MainSystem.RootDrive.IsDirectory(followedPath))
                     {
                         MainSession.SetWorkingDirectory(newPath);
@@ -40,7 +40,10 @@ namespace SOD
                     {
                         StdOut.Write(newPath.ToString() + " is not a directory.\n");
                     }
-                    return;
+                    }
+                    catch (System.Exception exp) {
+                        Debug.Log("CD EXP: " + exp.Message);
+                    }
                 }
             }
         }
