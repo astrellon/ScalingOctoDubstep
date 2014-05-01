@@ -14,11 +14,16 @@ namespace SOD
 
                 public string RootFolder = "";
                 public byte []SymlinkHeader = null;
+                public byte []CharacterDeviceHeader = null;
                 public FileSystem()
                 {
                     SymlinkHeader = System.Text.Encoding.ASCII.GetBytes("!<symlink>  ");
                     SymlinkHeader[10] = 0xFF;
                     SymlinkHeader[11] = 0xFE;
+
+                    CharacterDeviceHeader = System.Text.Encoding.ASCII.GetBytes("!<chardevice>  ");
+                    CharacterDeviceHeader[10] = 0xFF;
+                    CharacterDeviceHeader[11] = 0xFE;
                 }
 
                 public FileNode[] ListFiles(string path)
@@ -158,11 +163,51 @@ namespace SOD
                         throw new Exception(exp.Message);
                     }
                 }
+                public int MakeLink(NixPath source, NixPath destination)
+                {
+                    byte []pathBytes = System.Text.Encoding.UTF8.GetBytes(source.ToString());
+                    NixPath outputFile = FollowLinks(destination);
+                    if (outputFile != null)
+                    {
+                        FileStream output = File.OpenWrite(GetPathTo(destination));
+                        output.Write(SymlinkHeader, 0, SymlinkHeader.Length);
+                        output.Write(pathBytes, 0, pathBytes.Length);
+                        output.Close();
+                        return 1;
+                    }
+                    else
+                    {
+                        return 0;
+                    }
+                }
+                public int MakeCharacterDevice(NixPath destination, int id)
+                {
+                    byte []idBytes = System.Text.Encoding.UTF8.GetBytes(id.ToString());
+                    NixPath outputFile = FollowLinks(destination);
+                    if (outputFile != null)
+                    {
+                        //Strema output = OpenFile(destination, 
+                        FileStream output = File.OpenWrite(GetPathTo(destination));
+                        output.Write(CharacterDeviceHeader, 0, CharacterDeviceHeader.Length);
+                        output.Write(idBytes, 0, idBytes.Length);
+                        output.Close();
+                        return 1;
+                    }
+                    else
+                    {
+                        return 0;
+                    }
+                }
+
+                public Stream OpenFile(NixPath path, FileAccess access, FileMode mode)
+                {
+                    Stream file = File.Open(GetPathTo(path), mode, access); 
+                    return file;
+                }
 
                 public void MakeDirectory(NixPath path, bool createParents)
                 {
                     string pathStr = GetPathTo(path);
-                    Debug.Log("Makedir str: " + pathStr);
                     if (createParents)
                     {
                         Directory.CreateDirectory(pathStr);

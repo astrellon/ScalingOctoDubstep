@@ -31,6 +31,7 @@ namespace SOD
             public Dictionary<int, Bin.Program> ActivePrograms { get; private set; }
             public int PidCounter { get; protected set; }
             public Lua.LuaOptions BaseLuaOptions { get; protected set; }
+            public DeviceManager MainDeviceManager { get; protected set; }
 
             public int NewPid()
             {
@@ -45,6 +46,8 @@ namespace SOD
             {
                 BaseSession = new Session();
                 Session.BaseSession = BaseSession;
+
+                MainDeviceManager = new DeviceManager(this);
 
                 RootDrive = new FileSystem.FileSystem();
                 RootDrive.RootFolder = Path.Combine(Directory.GetCurrentDirectory(), "root");
@@ -97,7 +100,6 @@ namespace SOD
                 */
 
                 BeginBoot();
-
             }
 
             public bool BeginBoot()
@@ -142,7 +144,9 @@ namespace SOD
                 NixPath path = new NixPath(cmd);
 
                 ProgramRunType result = new ProgramRunType();
-                using (StreamReader reader = new StreamReader(RootDrive.GetPathTo(path.ToString())))
+                string pathTo = RootDrive.GetPathTo(RootDrive.FollowLinks(path));
+                Debug.Log("GPRT: " + path.ToString() + " | " + pathTo);
+                using (StreamReader reader = new StreamReader(pathTo))
                 {
                     string firstLine = reader.ReadLine();
                     if (firstLine.Length > 2)

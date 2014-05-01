@@ -34,7 +34,8 @@ namespace SOD
                             //NixPath path = MainSystem.RootDrive.FollowLinks(MainSession.WorkingDirectory.Combine(Argv[i]));
                             if (MainSystem.RootDrive.IsFileOrDirectory(path))
                             {
-                                FileStream file = File.OpenRead(MainSystem.RootDrive.GetPathTo(path.ToString()));
+                                Stream file = MainSystem.RootDrive.OpenFile(path, FileAccess.Read, FileMode.Create);
+                                //FileStream file = File.OpenRead(MainSystem.RootDrive.GetPathTo(path.ToString()));
                                 StreamReader reader = new StreamReader(file);
                                 StdOut.WriteLine(reader.ReadToEnd());
                             }
