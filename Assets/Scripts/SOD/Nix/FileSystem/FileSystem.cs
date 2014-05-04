@@ -169,10 +169,11 @@ namespace SOD
                     NixPath outputFile = FollowLinks(destination);
                     if (outputFile != null)
                     {
-                        FileStream output = File.OpenWrite(GetPathTo(destination));
-                        output.Write(SymlinkHeader, 0, SymlinkHeader.Length);
-                        output.Write(pathBytes, 0, pathBytes.Length);
-                        output.Close();
+                        using (FileStream output = File.OpenWrite(GetPathTo(destination)))
+                        {
+                            output.Write(SymlinkHeader, 0, SymlinkHeader.Length);
+                            output.Write(pathBytes, 0, pathBytes.Length);
+                        }
                         return 1;
                     }
                     else
@@ -187,10 +188,11 @@ namespace SOD
                     if (outputFile != null)
                     {
                         //Strema output = OpenFile(destination, 
-                        FileStream output = File.OpenWrite(GetPathTo(destination));
-                        output.Write(CharacterDeviceHeader, 0, CharacterDeviceHeader.Length);
-                        output.Write(idBytes, 0, idBytes.Length);
-                        output.Close();
+                        using (FileStream output = File.OpenWrite(GetPathTo(destination)))
+                        {
+                            output.Write(CharacterDeviceHeader, 0, CharacterDeviceHeader.Length);
+                            output.Write(idBytes, 0, idBytes.Length);
+                        }
                         return 1;
                     }
                     else
@@ -201,7 +203,8 @@ namespace SOD
 
                 public Stream OpenFile(NixPath path, FileAccess access, FileMode mode)
                 {
-                    Stream file = File.Open(GetPathTo(path), mode, access); 
+                    string openPath = GetPathTo(path);
+                    Stream file = File.Open(openPath, mode, access); 
                     return file;
                 }
 
@@ -249,25 +252,27 @@ namespace SOD
                         {
                             return null;
                         }
-                        FileStream stream = File.OpenRead(fullPath);
-                        byte []symcheck = new byte[SymlinkHeader.Length];
-                        int read = stream.Read(symcheck, 0, symcheck.Length);
-                        if (read != symcheck.Length)
+                        using (FileStream stream = File.OpenRead(fullPath)) 
                         {
-                            return null;
-                        }
-                        for (int i = 0; i < SymlinkHeader.Length; i++)
-                        {
-                            if (symcheck[i] != SymlinkHeader[i])
+                            byte []symcheck = new byte[SymlinkHeader.Length];
+                            int read = stream.Read(symcheck, 0, symcheck.Length);
+                            if (read != symcheck.Length)
                             {
                                 return null;
                             }
+                            for (int i = 0; i < SymlinkHeader.Length; i++)
+                            {
+                                if (symcheck[i] != SymlinkHeader[i])
+                                {
+                                    return null;
+                                }
+                            }
+                            long remaining = stream.Length - symcheck.Length;
+                            byte []pathBytes = new byte[remaining];
+                            stream.Read(pathBytes, 0, (int)remaining); 
+                            string pathStr = System.Text.Encoding.UTF8.GetString(pathBytes); 
+                            return new NixPath(pathStr);
                         }
-                        long remaining = stream.Length - symcheck.Length;
-                        byte []pathBytes = new byte[remaining];
-                        stream.Read(pathBytes, 0, (int)remaining); 
-                        string pathStr = System.Text.Encoding.UTF8.GetString(pathBytes); 
-                        return new NixPath(pathStr);
                     }
                     catch (Exception exp) 
                     {

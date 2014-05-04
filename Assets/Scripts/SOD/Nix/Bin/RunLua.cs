@@ -29,10 +29,11 @@ namespace SOD
                 }
                 public Stream OpenFileHandler(string filename, FileMode mode, FileAccess access)
                 {
-					Debug.Log ("ASD");
                     NixPath path = OpenPath(filename);
                     Debug.Log("Attempting to opening Lua file: " + path.ToString());
-                    return new FileStream(MainSystem.RootDrive.GetPathTo(path), mode, access);
+
+                    //return new FileStream(MainSystem.RootDrive.GetPathTo(path), mode, access);
+                    return MainSystem.RootDrive.OpenFile(path, access, mode);
                 }
                 public int RemoveFileHandler(string filename)
                 {

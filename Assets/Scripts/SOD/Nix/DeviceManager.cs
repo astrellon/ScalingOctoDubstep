@@ -35,6 +35,7 @@ namespace SOD
                     return DevicesById[id];
                 }
                 return null;
+
             }
 
             public bool AddDevice(Bin.CharacterDevice device)
