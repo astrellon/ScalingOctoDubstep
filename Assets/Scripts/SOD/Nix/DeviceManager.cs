@@ -12,6 +12,14 @@ namespace SOD
             public Dictionary<int, Bin.CharacterDevice> DevicesById;
             public Dictionary<string, List<Bin.CharacterDevice>> DevicesByType;
             public NixSystem MainSystem { get; private set; }
+            private int _Counter = 0;
+            public int Counter
+            {
+                get
+                {
+                    return _Counter++;
+                }
+            }
 
             public DeviceManager(NixSystem system)
             {
@@ -35,12 +43,11 @@ namespace SOD
                     return DevicesById[id];
                 }
                 return null;
-
             }
 
             public bool AddDevice(Bin.CharacterDevice device)
             {
-                int id = device.GetId();  
+                int id = device.Id;  
                 if (DevicesById.ContainsKey(id))
                 {
                     return false;
@@ -57,7 +64,7 @@ namespace SOD
             }
             public bool RemoveDevice(Bin.CharacterDevice device)
             {
-                int id = device.GetId();
+                int id = device.Id;
                 if (!DevicesById.ContainsKey(id))
                 {
                     return false;

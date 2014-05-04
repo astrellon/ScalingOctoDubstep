@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 
 namespace SOD
 {
@@ -6,19 +7,29 @@ namespace SOD
     {
         namespace Bin
         {
-            public abstract class CharacterDevice
+            public abstract class CharacterDevice : Stream
             {
-                public abstract int Read(byte []buffer, int offset, int count);
-                public abstract void Write(byte []buffer, int offset, int count);
-                public abstract int Open();
-                public abstract int Release();
-                public abstract int Init();
-                public abstract void Close();
+                public int Id { get; set; }
+                public bool IsOpen { get; protected set; }
+
+                /*
+                public bool CanRead { get; }
+                public bool CanSeek { get; }
+                public bool CanTimeout { get; }
+                public bool CanWrite { get; }
+                public long Length { get; }
+                public long Position { get; set; }
+                public void Close();
+                public void Flush();
+                public long Seek(long offset, SeekOrigin origin);
+                public void SetLength(long value);
+                */
+
+                public abstract int DeinitDevice();
+                public abstract int InitDevice();
 
                 public abstract string DeviceType();
                 public abstract string DeviceName();
-                public abstract int GetId();
-                public abstract void SetId(int id);
             }
         }
     }

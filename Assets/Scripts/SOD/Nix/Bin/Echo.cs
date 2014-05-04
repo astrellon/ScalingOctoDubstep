@@ -21,15 +21,18 @@ namespace SOD
                 }
                 protected override void Run()
                 {
+                    // TODO Change to string builder
+                    string output = "";
                     for (int i = 1; i < Argv.Count; i++)
                     {
                         if (i > 1)
                         {
-                            StdOut.Write(" ");
+                            output += " ";
                         }
-                        StdOut.Write(Argv[i]);
+                        output += Argv[i];
                     }
-                    StdOut.Write("\n");
+                    output += "\n";
+                    StdOut.Write(output);
                     return;
                 }
 

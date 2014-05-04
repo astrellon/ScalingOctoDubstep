@@ -15,8 +15,10 @@ namespace SOD
                 public string RootFolder = "";
                 public byte []SymlinkHeader = null;
                 public byte []CharacterDeviceHeader = null;
-                public FileSystem()
+                public NixSystem MainSystem { get; private set; }
+                public FileSystem(NixSystem system)
                 {
+                    MainSystem = system;
                     SymlinkHeader = System.Text.Encoding.ASCII.GetBytes("!<symlink>  ");
                     SymlinkHeader[10] = 0xFF;
                     SymlinkHeader[11] = 0xFE;
@@ -120,6 +122,10 @@ namespace SOD
                 {
                     return GetLink(path) != null;
                 }
+                public bool IsDeviceFile(NixPath path)
+                {
+                    return GetDeviceId(path) != -1;
+                }
 
                 public void Copy(NixPath fromPath, NixPath toPath)
                 {
@@ -187,7 +193,6 @@ namespace SOD
                     NixPath outputFile = FollowLinks(destination);
                     if (outputFile != null)
                     {
-                        //Strema output = OpenFile(destination, 
                         using (FileStream output = File.OpenWrite(GetPathTo(destination)))
                         {
                             output.Write(CharacterDeviceHeader, 0, CharacterDeviceHeader.Length);
@@ -204,8 +209,16 @@ namespace SOD
                 public Stream OpenFile(NixPath path, FileAccess access, FileMode mode)
                 {
                     string openPath = GetPathTo(path);
-                    Stream file = File.Open(openPath, mode, access); 
-                    return file;
+                    int deviceId = GetDeviceId(path);
+                    if (deviceId != -1)
+                    {
+                        return MainSystem.MainDeviceManager.FindDevice(deviceId);
+                    }
+                    else
+                    {
+                        return File.Open(openPath, mode, access); 
+                    }
+                    return null;
                 }
 
                 public void MakeDirectory(NixPath path, bool createParents)
@@ -244,42 +257,80 @@ namespace SOD
                 {
                     File.Move(GetPathTo(frompath), GetPathTo(topath));
                 }
+
+                // Special Symbolic Link and Device files {{{
+                protected string ReadSpecial(string fullPath, byte []headerCheck)
+                {
+                    if (!File.Exists(fullPath))
+                    {
+                        return null;
+                    }
+                    using (FileStream stream = File.OpenRead(fullPath)) 
+                    {
+                        byte []check = new byte[headerCheck.Length];
+                        int read = stream.Read(check, 0, check.Length);
+                        if (read != check.Length)
+                        {
+                            return null;
+                        }
+                        for (int i = 0; i < headerCheck.Length; i++)
+                        {
+                            if (check[i] != headerCheck[i])
+                            {
+                                return null;
+                            }
+                        }
+                        long remaining = stream.Length - check.Length;
+                        byte []bytes= new byte[remaining];
+                        stream.Read(bytes, 0, (int)remaining); 
+                        string str = System.Text.Encoding.UTF8.GetString(bytes); 
+                        return str;
+                    }
+                }
+
+                public int GetDeviceId(string fullPath)
+                {
+                    try
+                    {
+                        string deviceIdStr = ReadSpecial(fullPath, CharacterDeviceHeader);
+                        if (deviceIdStr != null)
+                        {
+                            int deviceId = -1;
+                            bool parsed = Int32.TryParse(deviceIdStr, out deviceId);
+                            if (parsed)
+                            {
+                                return deviceId;
+                            }
+                        }
+                        return -1;
+                    }
+                    catch (Exception exp)
+                    {
+                        Debug.Log("Error getting device id: " + exp.Message);
+                    }
+                    return -1;
+                }
+                public int GetDeviceId(NixPath path)
+                {
+                    return GetDeviceId(GetPathTo(path));
+                }
+
                 public NixPath GetLink(string fullPath)
                 {
 					try
                     {
-                        if (!File.Exists(fullPath))
+                        string path = ReadSpecial(fullPath, SymlinkHeader);
+                        if (path != null)
                         {
-                            return null;
+                            return new NixPath(path);
                         }
-                        using (FileStream stream = File.OpenRead(fullPath)) 
-                        {
-                            byte []symcheck = new byte[SymlinkHeader.Length];
-                            int read = stream.Read(symcheck, 0, symcheck.Length);
-                            if (read != symcheck.Length)
-                            {
-                                return null;
-                            }
-                            for (int i = 0; i < SymlinkHeader.Length; i++)
-                            {
-                                if (symcheck[i] != SymlinkHeader[i])
-                                {
-                                    return null;
-                                }
-                            }
-                            long remaining = stream.Length - symcheck.Length;
-                            byte []pathBytes = new byte[remaining];
-                            stream.Read(pathBytes, 0, (int)remaining); 
-                            string pathStr = System.Text.Encoding.UTF8.GetString(pathBytes); 
-                            return new NixPath(pathStr);
-                        }
+                        return null;
                     }
                     catch (Exception exp) 
                     {
                         Debug.Log("Error following link: " + exp.Message);
                     }
 					return null;
-
                 }
                 public NixPath GetLink(NixPath path)
                 {
@@ -323,6 +374,7 @@ namespace SOD
                     }
                     return build;
                 }
+                // End }}}
             }
         }
     }

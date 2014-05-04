@@ -49,7 +49,7 @@ namespace SOD
 
                 MainDeviceManager = new DeviceManager(this);
 
-                RootDrive = new FileSystem.FileSystem();
+                RootDrive = new FileSystem.FileSystem(this);
                 RootDrive.RootFolder = Path.Combine(Directory.GetCurrentDirectory(), "root");
                 Directory.CreateDirectory(RootDrive.RootFolder);
                 ActivePrograms = new Dictionary<int, Bin.Program>();
@@ -71,6 +71,13 @@ namespace SOD
                 Shell = new Bin.Bash(NewPid());
                 BaseSession.Shell = Shell;
                 BaseSession.MainSystem = this;
+
+                Bin.TestDevice device = new Bin.TestDevice();
+                device.Id = MainDeviceManager.Counter;
+                MainDeviceManager.AddDevice(device);
+
+                RootDrive.MakeDirectory(new NixPath("/dev"), true);
+                RootDrive.MakeCharacterDevice(new NixPath("/dev/test"), device.Id);
 
                 Terminal term = GetComponent<Terminal>();
                 if (term != null)

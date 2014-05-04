@@ -31,20 +31,19 @@ namespace SOD
                         for (int i = 1; i < Argv.Count; i++)
                         {
                             NixPath path = OpenPath(Argv[i]);
-                            //NixPath path = MainSystem.RootDrive.FollowLinks(MainSession.WorkingDirectory.Combine(Argv[i]));
                             if (MainSystem.RootDrive.IsFileOrDirectory(path))
                             {
                                 try
                                 {
-                                using (Stream file = MainSystem.RootDrive.OpenFile(path, FileAccess.Read, FileMode.Open))
-                                {
-                                    StreamReader reader = new StreamReader(file);
-                                    StdOut.WriteLine(reader.ReadToEnd());
-                                }
+                                    using (Stream file = MainSystem.RootDrive.OpenFile(path, FileAccess.Read, FileMode.Open))
+                                    {
+                                        StreamReader reader = new StreamReader(file);
+                                        StdOut.Write(reader.ReadToEnd());
+                                    }
                                 }
                                 catch (System.Exception exp)
                                 {
-                                    StdOut.WriteLine("EZXP: " + exp.Message);
+                                    StdOut.WriteLine("Error reading file for cat: " + exp.Message);
                                 }
                             }
                             else
