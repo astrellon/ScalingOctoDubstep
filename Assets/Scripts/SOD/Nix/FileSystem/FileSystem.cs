@@ -213,7 +213,7 @@ namespace SOD
                     if (deviceId != -1)
                     {
                         //return MainSystem.MainDeviceManager.FindDevice(deviceId);
-                        Bin.CharacterDevice device = MainSystem.MainDeviceManager.FindDevice(deviceId);
+                        Device.CharacterDevice device = MainSystem.MainDeviceManager.FindDevice(deviceId);
                         if (device != null)
                         {
                             return device.CreateStream();

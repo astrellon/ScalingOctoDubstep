@@ -5,7 +5,7 @@ namespace SOD
 {
     namespace Nix
     {
-        namespace Bin
+        namespace Device
         {
             public class DeviceStream : Stream
             {

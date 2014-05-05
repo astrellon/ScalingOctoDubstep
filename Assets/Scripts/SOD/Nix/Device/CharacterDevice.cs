@@ -5,7 +5,7 @@ namespace SOD
 {
     namespace Nix
     {
-        namespace Bin
+        namespace Device
         {
             public abstract class CharacterDevice
             {

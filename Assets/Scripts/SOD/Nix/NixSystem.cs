@@ -31,7 +31,7 @@ namespace SOD
             public Dictionary<int, Bin.Program> ActivePrograms { get; private set; }
             public int PidCounter { get; protected set; }
             public Lua.LuaOptions BaseLuaOptions { get; protected set; }
-            public DeviceManager MainDeviceManager { get; protected set; }
+            public Device.DeviceManager MainDeviceManager { get; protected set; }
 
             public int NewPid()
             {
@@ -47,7 +47,7 @@ namespace SOD
                 BaseSession = new Session();
                 Session.BaseSession = BaseSession;
 
-                MainDeviceManager = new DeviceManager(this);
+                MainDeviceManager = new Device.DeviceManager(this);
 
                 RootDrive = new FileSystem.FileSystem(this);
                 RootDrive.RootFolder = Path.Combine(Directory.GetCurrentDirectory(), "root");
@@ -72,7 +72,7 @@ namespace SOD
                 BaseSession.Shell = Shell;
                 BaseSession.MainSystem = this;
 
-                Bin.TestDevice device = new Bin.TestDevice();
+                Device.TestDevice device = new Device.TestDevice();
                 device.Id = MainDeviceManager.Counter;
                 MainDeviceManager.AddDevice(device);
 

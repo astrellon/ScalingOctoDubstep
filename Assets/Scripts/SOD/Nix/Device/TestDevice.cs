@@ -6,9 +6,8 @@ namespace SOD
 {
     namespace Nix
     {
-        namespace Bin
+        namespace Device
         {
-
             public class TestDevice : CharacterDevice
             {
                 public string Message = "no message";
