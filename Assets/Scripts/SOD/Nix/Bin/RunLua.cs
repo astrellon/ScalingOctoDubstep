@@ -88,6 +88,7 @@ namespace SOD
 					opts.RemoveFileHandler = RemoveFileHandler;
 					opts.GetTempFilenameHandler = GetTempFilenameHandler;
                     Lua l = new Lua(opts);
+
                     try
                     {
                         if (Argv.Count > 1)
@@ -119,6 +120,7 @@ namespace SOD
                     }
                     catch (Exception exp)
                     {
+                        Debug.Log("Lua Exp: " + exp.Message);
                         StdOut.WriteLine("Exception executing Lua: " + exp.Message);
                     }
                 }

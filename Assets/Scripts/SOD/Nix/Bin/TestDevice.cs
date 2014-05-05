@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Collections.Generic;
 
 namespace SOD
 {
@@ -12,7 +13,7 @@ namespace SOD
             {
                 public string Message = "no message";
                 private byte []FullMessage = null;
-                private bool ReadFlag = false;
+                private Dictionary<int, bool> ReadFlags = new Dictionary<int, bool>();
                 public TestDevice()
                 {
                     MakeFullMessage();
@@ -23,48 +24,30 @@ namespace SOD
                 }
 
                 public override bool CanRead { get { return true; } }
-                public override bool CanSeek { get { return true; } }
-                public override bool CanTimeout { get { return true; } }
                 public override bool CanWrite { get { return true; } }
-
-                public override long Length { get { return FullMessage.Length; } }
-                public override long Position { get { return 0; } set { } }
-                public override int Read(byte []buffer, int offset, int count)
+                public override int Read(int socketId, byte []buffer, int offset, int count)
                 {
-                    if (ReadFlag)
+                    Session.BaseStdOut.WriteLine("Attempting to read from Test device! " + socketId + " | " + count); 
+                    if (ReadFlags.ContainsKey(socketId) && ReadFlags[socketId])
                     {
                         return 0;
                     }
-                    ReadFlag = true;
-                    Session.BaseStdOut.WriteLine("Attempting to read from Test device!"); 
+                    ReadFlags[socketId] = true;
                     int numRead = Math.Min(count, FullMessage.Length);
                     Array.Copy(FullMessage, 0, buffer, offset, numRead);
                     return numRead;
                 }
-                public override void Write(byte []buffer, int offset, int count)
+                public override void Write(int socketId, byte []buffer, int offset, int count)
                 {
-                    ReadFlag = false;
+                    ReadFlags[socketId] = false;
                     Message = System.Text.Encoding.UTF8.GetString(buffer, offset, count);
                     Session.BaseStdOut.WriteLine("Writing to device >" + Message + "<");
                     MakeFullMessage();
                 }
-                public override void Close()
+                public override void Close(int socketId)
                 {
 
                 }
-                public override void Flush()
-                {
-
-                }
-                public override long Seek(long offset, SeekOrigin origin)
-                {
-                    return 0;
-                }
-                public override void SetLength(long value)
-                {
-
-                }
-
                 public override int DeinitDevice()
                 {
                     return 1;
