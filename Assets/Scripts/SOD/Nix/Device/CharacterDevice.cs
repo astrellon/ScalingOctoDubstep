@@ -12,6 +12,11 @@ namespace SOD
                 public int Id { get; set; }
                 public bool IsOpen { get; protected set; }
 
+                public CharacterDevice()
+                {
+                    Id = -1;
+                }
+
                 /*
                 public bool CanSeek { get; }
                 public bool CanTimeout { get; }
@@ -21,8 +26,8 @@ namespace SOD
                 public long Seek(long offset, SeekOrigin origin);
                 public void SetLength(long value);
                 */
-                public abstract bool CanRead { get; }
-                public abstract bool CanWrite { get; }
+                public virtual bool CanRead { get { return true; } }
+                public virtual bool CanWrite { get { return true; } }
                 public abstract void Close(int socketId);
                 public abstract int Read(int socketId, byte []buffer, int offset, int count);
                 public abstract void Write(int socketid, byte []buffer, int offset, int count);

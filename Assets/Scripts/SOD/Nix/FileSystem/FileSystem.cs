@@ -212,7 +212,6 @@ namespace SOD
                     int deviceId = GetDeviceId(path);
                     if (deviceId != -1)
                     {
-                        //return MainSystem.MainDeviceManager.FindDevice(deviceId);
                         Device.CharacterDevice device = MainSystem.MainDeviceManager.FindDevice(deviceId);
                         if (device != null)
                         {

@@ -22,8 +22,6 @@ namespace SOD
                     FullMessage = System.Text.Encoding.UTF8.GetBytes("Test device!: >" + Message + "<");
                 }
 
-                public override bool CanRead { get { return true; } }
-                public override bool CanWrite { get { return true; } }
                 public override int Read(int socketId, byte []buffer, int offset, int count)
                 {
                     Session.BaseStdOut.WriteLine("Attempting to read from Test device! " + socketId + " | " + count); 

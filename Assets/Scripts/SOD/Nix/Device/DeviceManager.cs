@@ -48,12 +48,15 @@ namespace SOD
 
                 public bool AddDevice(Device.CharacterDevice device)
                 {
-                    int id = device.Id;  
-                    if (DevicesById.ContainsKey(id))
+                    if (device.Id == -1)
+                    {
+                        device.Id = Counter;
+                    }
+                    if (DevicesById.ContainsKey(device.Id))
                     {
                         return false;
                     }
-                    DevicesById[id] = device;
+                    DevicesById[device.Id] = device;
 
                     string type = device.DeviceType();
                     if (!DevicesByType.ContainsKey(type))

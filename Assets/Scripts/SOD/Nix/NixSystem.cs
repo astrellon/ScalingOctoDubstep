@@ -44,8 +44,19 @@ namespace SOD
 
             public void Start()
             {
+                BeginBoot();
+            }
+
+            public bool BeginBoot()
+            {
                 BaseSession = new Session();
                 Session.BaseSession = BaseSession;
+
+                Shell = new Bin.Bash(NewPid());
+                BaseSession.Shell = Shell;
+                BaseSession.MainSystem = this;
+                Shell.StdOut.WriteLine("Booting...");
+
 
                 MainDeviceManager = new Device.DeviceManager(this);
 
@@ -68,16 +79,19 @@ namespace SOD
                 AddProgram("rm", typeof(Bin.Rm));
                 AddProgram("ln", typeof(Bin.Ln));
 
-                Shell = new Bin.Bash(NewPid());
-                BaseSession.Shell = Shell;
-                BaseSession.MainSystem = this;
-
-                Device.TestDevice device = new Device.TestDevice();
-                device.Id = MainDeviceManager.Counter;
-                MainDeviceManager.AddDevice(device);
-
                 RootDrive.MakeDirectory(new NixPath("/dev"), true);
+                Device.CharacterDevice device = new Device.NullDevice();
+                MainDeviceManager.AddDevice(device);
+                RootDrive.MakeCharacterDevice(new NixPath("/dev/null"), device.Id);
+
+                device = new Device.ZeroDevice();
+                MainDeviceManager.AddDevice(device);
+                RootDrive.MakeCharacterDevice(new NixPath("/dev/zero"), device.Id);
+
+                device = new Device.TestDevice(); 
+                MainDeviceManager.AddDevice(device);
                 RootDrive.MakeCharacterDevice(new NixPath("/dev/test"), device.Id);
+
 
                 Terminal term = GetComponent<Terminal>();
                 if (term != null)
@@ -85,33 +99,7 @@ namespace SOD
                     term.Shell = Shell;
                     term.CurrentSession = BaseSession;
                 }
-                /*
-                        BaseLuaOptions = new Lua.LuaOptions();
-                        BaseLuaOptions.StdOut = Shell.StdOut;
-                        BaseLuaOptions.StdIn = Shell.StdIn;
-                        BaseLuaOptions.StdErr = Shell.StdErr;
-                        BaseLuaOptions.RootFolder = RootDrive.RootFolder;
-                */
-                /*
-                Lua l = new Lua();
-                Lua.LuaOptions opts = new Lua.LuaOptions();
-                opts.StdOut = Shell.StdOut.InternalStream;
-                opts.RootFolder = @"C:\git\ScalingOctoDubstep\root\";
-                l.SetOptions(opts);
-                l.DoString(@"f = io.open('test.out', 'r')
-                        print(f:read('*all'))
-                        print('\n')
-                        a='hello'");
-                string a = l.GetString("a");
-                Debug.Log("A: " + a);
-                */
 
-                BeginBoot();
-            }
-
-            public bool BeginBoot()
-            {
-                Shell.StdOut.WriteLine("Booting...");
                 Shell.StdOut.WriteLine("Booting Complete...");
 
                 Shell.ExecuteAsync(this, BaseSession, new string[] { "" });
