@@ -22,72 +22,10 @@ namespace SOD
                 {
                     return "lua";
                 }
-                public int ExecuteHandler(string line)
-                {
-                    MainSession.Shell.Execute(line);
-                    return 0;
-                }
-                public Stream OpenFileHandler(string filename, FileMode mode, FileAccess access)
-                {
-                    NixPath path = OpenPath(filename);
-                    Debug.Log("Attempting to opening Lua file: " + path.ToString());
-
-                    //return new FileStream(MainSystem.RootDrive.GetPathTo(path), mode, access);
-                    return MainSystem.RootDrive.OpenFile(path, access, mode);
-                }
-                public int RemoveFileHandler(string filename)
-                {
-                    NixPath path = MainSession.PhysicalDirectory.Combine(new NixPath(filename));
-                    try
-                    {
-                        if (MainSystem.RootDrive.IsDirectory(path))
-                        {
-                            MainSystem.RootDrive.DeleteDirectory(path, false);
-                        }
-                        else
-                        {
-                            MainSystem.RootDrive.DeleteFile(path);
-                        }
-                    }
-                    catch (Exception exp)
-                    {
-                        Debug.Log("Error removing file from Lua: " + exp.Message);
-                        return -1;
-                    }
-                    return 0;
-                }
-                public int RenameFileHandler(string fromname, string toname)
-                {
-                    NixPath frompath = MainSession.PhysicalDirectory.Combine(new NixPath(fromname));
-                    NixPath topath = MainSession.PhysicalDirectory.Combine(new NixPath(toname));
-                    try
-                    {
-                        MainSystem.RootDrive.Rename(frompath, topath);
-                    }
-                    catch (Exception exp)
-                    {
-                        Debug.Log("Error renaming file from Lua: " + exp.Message);
-                        return -1;
-                    }
-                    return 0;
-                }
-                public string GetTempFilenameHandler()
-                {
-                    string tmpFolder = MainSession.GetEnvValue("TMPDIR", "/tmp");
-                    return tmpFolder + "/" + System.Guid.NewGuid().ToString();
-                }
                 protected override void Run()
                 {
-                    Lua.LuaOptions opts = new Lua.LuaOptions();
-                    opts.StdOut = StdOut;
-                    opts.StdIn = StdIn;
-                    opts.StdErr = StdErr;
-                    opts.ExecuteHandler = ExecuteHandler;
-					opts.OpenFileHandler = OpenFileHandler;
-					opts.RenameFileHandler = RenameFileHandler;
-					opts.RemoveFileHandler = RemoveFileHandler;
-					opts.GetTempFilenameHandler = GetTempFilenameHandler;
-                    Lua l = new Lua(opts);
+                    LuaSystem luaSys = new LuaSystem(MainSession, MainSystem, StdOut, StdIn, StdErr);
+                    Lua l = luaSys.Lua;
 
                     try
                     {
@@ -104,7 +42,6 @@ namespace SOD
                                 {
                                     argStr += "arg[" + (i - 1) + "]=\"" + Argv[i] + "\"\n";
                                 }
-								Debug.Log ("Lua args: " + argStr);
                                 l.DoString(argStr);
                                 l.DoFile(newPath.ToString());
                             }
@@ -120,7 +57,6 @@ namespace SOD
                     }
                     catch (Exception exp)
                     {
-                        Debug.Log("Lua Exp: " + exp.Message);
                         StdOut.WriteLine("Exception executing Lua: " + exp.Message);
                     }
                 }

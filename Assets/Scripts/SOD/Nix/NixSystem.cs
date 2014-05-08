@@ -57,7 +57,6 @@ namespace SOD
                 BaseSession.MainSystem = this;
                 Shell.StdOut.WriteLine("Booting...");
 
-
                 MainDeviceManager = new Device.DeviceManager(this);
 
                 RootDrive = new FileSystem.FileSystem(this);
@@ -78,6 +77,7 @@ namespace SOD
                 AddProgram("mv", typeof(Bin.Mv));
                 AddProgram("rm", typeof(Bin.Rm));
                 AddProgram("ln", typeof(Bin.Ln));
+                AddProgram("mkdevice", typeof(Bin.MakeDevice));
 
                 RootDrive.MakeDirectory(new NixPath("/dev"), true);
                 Device.CharacterDevice device = new Device.NullDevice();
@@ -91,7 +91,6 @@ namespace SOD
                 device = new Device.TestDevice(); 
                 MainDeviceManager.AddDevice(device);
                 RootDrive.MakeCharacterDevice(new NixPath("/dev/test"), device.Id);
-
 
                 Terminal term = GetComponent<Terminal>();
                 if (term != null)
