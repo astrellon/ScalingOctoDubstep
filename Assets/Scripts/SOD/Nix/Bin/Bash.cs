@@ -314,10 +314,7 @@ namespace SOD
                             if (operand == ">" || operand == "<")
                             {
                                 NixPath filePath = new NixPath(args2);
-                                /*
-                                string path = MainSystem.RootDrive.GetPathTo(MainSession.WorkingDirectory.Combine(filePath).ToString());
-                                */
-                                NixPath path = MainSession.WorkingDirectory.Combine(filePath);
+                                NixPath path = OpenPath(filePath);
                                 using (Stream fstream = MainSystem.RootDrive.OpenFile(path, FileAccess.Write, FileMode.Create))
                                 {
                                     if (operand == ">")
