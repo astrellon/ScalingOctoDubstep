@@ -32,6 +32,7 @@ namespace SOD
             public int PidCounter { get; protected set; }
             public Lua.LuaOptions BaseLuaOptions { get; protected set; }
             public Device.DeviceManager MainDeviceManager { get; protected set; }
+            protected Dictionary<int, TTY> TTYs = new Dictionary<int, TTY>();
 
             public int NewPid()
             {
@@ -92,18 +93,41 @@ namespace SOD
                 MainDeviceManager.AddDevice(device);
                 RootDrive.MakeCharacterDevice(new NixPath("/dev/test"), device.Id);
 
+                /*
                 Terminal term = GetComponent<Terminal>();
                 if (term != null)
                 {
-                    term.Shell = Shell;
-                    term.CurrentSession = BaseSession;
+                    //term.Shell = Shell;
+                    //term.CurrentSession = BaseSession;
                 }
+                */
 
                 Shell.StdOut.WriteLine("Booting Complete...");
 
                 Shell.ExecuteAsync(this, BaseSession, new string[] { "" });
 
                 return true;
+            }
+
+            public TTY GetTTY(int index)
+            {
+                if (TTYs.ContainsKey(index))
+                {
+                    return TTYs[index];
+                }
+                TTYs[index] = new TTY();
+                return TTYs[index];
+            }
+            public void AttachTerminal(Terminal term)
+            {
+                AttachTerminal(term, -1);
+            }
+            public void AttachTerminal(Terminal term, int ttyIndex)
+            {
+                TTY tty = GetTTY(ttyIndex);
+                term.StdOut = tty.StdOut;
+                term.StdIn = tty.StdIn;
+                term.StdErr = tty.StdErr;
             }
 
             public FindCommandResult FindCommand(string cmd)

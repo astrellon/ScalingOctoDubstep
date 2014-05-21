@@ -341,9 +341,9 @@ namespace SOD
                     InputBuffer = buffer;
                     Cursor = buffer.Length;
                 }
-                protected void ProcessKeyboardEvent(Program.KeyboardEvent keyEvent)
+                protected void ProcessInputEvent(Program.InputEvent keyEvent)
                 {
-                    char c = keyEvent.Character;
+                    int c = keyEvent.KeyCode;
                     if (c != '\0')
                     {
                         if (c == '\r' || c == '\n')
@@ -368,12 +368,13 @@ namespace SOD
                         }
                         else
                         {
-                            try{
-                            InputBuffer = InputBuffer.Insert(Cursor, c.ToString());
+                            try
+                            {
+                                InputBuffer = InputBuffer.Insert(Cursor, c.ToString());
                             }
-                            catch (Exception exp) {
-                            InputBuffer += c;
-                            Debug.Log("Cursor insert: " + Cursor + " : "  + exp.Message);
+                            catch (Exception exp) 
+                            {
+                                InputBuffer += c;
                             }
 
                             Cursor++;
@@ -480,10 +481,10 @@ namespace SOD
                             Program.ProgramEvent progEvent = PopEvent();
                             if (progEvent.Message == Program.KeyboardDown)
                             {
-                                Program.KeyboardEvent keyEvent = (Program.KeyboardEvent)progEvent;
+                                Program.InputEvent keyEvent = (Program.InputEvent)progEvent;
                                 if (keyEvent != null)
                                 {
-                                    ProcessKeyboardEvent(keyEvent);
+                                    ProcessInputEvent(keyEvent);
                                 }
                             }
                         }

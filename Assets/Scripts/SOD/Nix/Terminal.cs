@@ -18,7 +18,7 @@ namespace SOD
                 public byte ColourAttr;
                 public bool Bold;
             }
-            public NixSystem System { get; set; }
+            public NixSystem System = null;
             public int Width = 80;
             public int Height = 16;
             public int MaxHeight = 20;
@@ -29,8 +29,9 @@ namespace SOD
             public int SavedCursorX { get; set; }
             public int SavedCursorY { get; set; }
             public string InputBuffer { get; set; }
-            public Session CurrentSession { get; set; }
-            public Bin.Program Shell { get; set; }
+            public System.IO.Stream StdOut { get; set; }
+            public System.IO.Stream StdIn { get; set; }
+            public System.IO.Stream StdErr { get; set; }
             protected List<byte> CommandSequence = null;
             public int ScrollX { get; set; }
             public int ScrollY { get; set; }
@@ -64,6 +65,12 @@ namespace SOD
                 textMesh = (TextMesh)GetComponent<TextMesh>();
 
                 UpdateBufferSize();
+
+                NixSystem sys = GetComponent<NixSystem>();
+                if (sys != null)
+                {
+                    sys.AttachTerminal(this);
+                }
             }
 
             public void UpdateBufferSize()
@@ -491,28 +498,16 @@ namespace SOD
                         builder.Append(text[j]);
                     }
                 }
-                if (CurrentSession.EchoInput())
-                {
-                    builder.Append(CurrentSession.InputBuffer);
-                }
                 builder.Append("</color>");
                 return builder.ToString();
             }
             void OnGUI()
             {
-                if (Event.current.isKey)
+                if (Event.current.isKey && Event.current.type == EventType.KeyUp)
                 {
-                    CurrentSession.KeyboardEvent(Event.current);
-                    if (Event.current.type == EventType.KeyDown)
+                    if (StdIn != null)
                     {
-                        if (Event.current.keyCode == KeyCode.PageUp)
-                        {
-                            ScrollY = Mathf.Max(0, ScrollY - 1);
-                        }
-                        else if (Event.current.keyCode == KeyCode.PageDown)
-                        {
-                            ScrollY = Mathf.Min(Buffer.Count - 1, ScrollY + 1);
-                        }
+                        StdIn.Write((byte)Event.current.keyCode);
                     }
                 }
                 Vector2 sizeOfCharacter = style.CalcSize(new GUIContent("M"));
@@ -533,44 +528,20 @@ namespace SOD
                 }
             }
 
-            void AddToBuffer(string input)
-            {
-                for (int i = 0; i < input.Length; i++)
-                {
-                    char data = input[i];
-                    if (data == '\b')
-                    {
-                        if (InputBuffer.Length > 0)
-                        {
-                            InputBuffer = InputBuffer.Remove(InputBuffer.Length - 1);
-                        }
-                        input = input.Remove(i);
-                    }
-                }
-                InputBuffer += input;
-            }
-
             // Update is called once per frame
             void Update()
             {
-
-                if (Shell != null)
+                if (StdOut != null)
                 {
-                    if (Shell.StdOut.Length - Shell.StdOut.Position > 0)
+                    if (StdOut.Length - StdOut.Position > 0)
                     {
-                        long maxRead = Shell.StdOut.Length - Shell.StdOut.Position;
+                        long maxRead = StdOut.Length - StdOut.Position;
                         byte[] data = new byte[maxRead];
-                        Shell.StdOut.Read(data, 0, (int)maxRead);
+                        StdOut.Read(data, 0, (int)maxRead);
                         Write(data);
                     }
                 }
-                /*
-                if (Input.inputString.Length > 0) {
-                    CurrentSession.(Input.inputString);
-                }
-                */
             }
         }
-
     }
 }

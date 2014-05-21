@@ -8,6 +8,7 @@ namespace SOD
     {
         public class Session
         {
+            // Get rid of this!
             public static Session BaseSession = null;
             public static System.IO.Stream BaseStdOut
             {
@@ -38,7 +39,6 @@ namespace SOD
                 }
             }
 
-            public string InputBuffer { get; protected set; }
             public Stack<Bin.Program> ActiveStack { get; private set; }
 
             public Session()
@@ -85,18 +85,6 @@ namespace SOD
                     ForegroundProgram = ActiveStack.Pop();
                 }
             }
-            public bool EchoInput()
-            {
-                if (ForegroundProgram != null)
-                {
-                    NixStream input = ForegroundProgram.StdIn as NixStream;
-                    if (input != null)
-                    {
-                        return input.EchoStream;
-                    }
-                }
-                return true;
-            }
             public string GetEnvValue(string key, string defaultValue = "")
             {
                 if (EnvironmentVariables.ContainsKey(key))
@@ -104,42 +92,6 @@ namespace SOD
                     return EnvironmentVariables[key];
                 }
                 return defaultValue;
-            }
-
-            public void KeyboardEvent(Event e)
-            {
-                if (e.type == EventType.KeyDown)
-                {
-                    if (e.character == '\r' || e.character == '\n')
-                    {
-                        string temp = InputBuffer + e.character;
-                        InputBuffer = "";
-                        if (ForegroundProgram != null)
-                        {
-                            if (EchoInput())
-                            {
-                                Debug.Log("Echoing input: " + temp);
-                                ForegroundProgram.StdOut.Write(temp);
-                            }
-                            ForegroundProgram.StdIn.Write(temp);
-                        }
-                    }
-                    else if (e.character != '\0')
-                    {
-                        InputBuffer += e.character;
-                    }
-                    if (ForegroundProgram != null)
-                    {
-                        ForegroundProgram.PushEvent(new Bin.Program.KeyboardEvent(Bin.Program.KeyboardDown, e.character, (int)e.keyCode));
-                    }
-                }
-                else if (e.type == EventType.KeyUp)
-                {
-                    if (ForegroundProgram != null)
-                    {
-                        ForegroundProgram.PushEvent(new Bin.Program.KeyboardEvent(Bin.Program.KeyboardUp, e.character, (int)e.keyCode));
-                    }
-                }
             }
         }
     }

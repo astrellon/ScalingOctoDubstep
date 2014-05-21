@@ -25,30 +25,45 @@ namespace SOD
                         Message = message;
                     }
                 }
-                public class KeyboardEvent : ProgramEvent
+                public class InputEvent : ProgramEvent
                 {
-                    public char Character { get; private set; }
                     public int KeyCode { get; private set; }
 
-                    public KeyboardEvent(int type, char character, int keyCode)
+                    public InputEvent(int type, int keyCode)
                         : base(type)
                     {
-                        Character = character;
                         KeyCode = keyCode;
                     }
                 }
 
                 public Stream StdOut { get; set; }
                 public Stream StdIn { get; set; }
+                public Stream InputStream { get; set; }
                 public Stream StdErr { get; set; }
                 public Thread MainThread { get; set; }
+                public Thread InputThread { get; set; }
                 public int Pid { get; private set; }
-                public bool Running { get; protected set; }
+                private bool _Running = false;
+                public bool Running { 
+                    get
+                    {
+                        return _Running;     
+                    }
+                    protected set
+                    {
+                        _Running = value;
+                        if (!_Running)
+                        {
+                            InputThread.Abort();
+                        }
+                    }
+                }
                 public NixSystem MainSystem { get; private set; }
                 public Session MainSession { get; private set; }
                 public IList<string> Argv { get; private set; }
                 public int Result { get; protected set; }
                 public Queue<ProgramEvent> Events { get; private set; }
+                public string InputBuffer { get; protected set; }
 
                 public Program(int pid, Stream stdout = null, Stream stdin = null, Stream stderr = null)
                 {
@@ -67,13 +82,14 @@ namespace SOD
                         s.EchoStream = true;
                         stdin = s;
                     }
-                    StdIn = stdin;
+                    InputStream = stdin;
                     if (stderr == null)
                     {
                         stderr = new NixStream();
                     }
                     StdErr = stderr;
-                    MainThread = new System.Threading.Thread(Run);
+                    MainThread = new System.Threading.Thread(RunHandler);
+                    InputThread = new System.Threading.Thread(InputRun);
                 }
 
                 public NixPath OpenPath(NixPath path)
@@ -124,12 +140,40 @@ namespace SOD
                     MainSystem = system;
                     MainSession = session;
                     Argv = argv;
-                    Running = true;
                     MainThread.Start();
                 }
 
+                protected virtual void RunHandler()
+                {
+                    Running = true;
+                    Run();
+                    Running = false;
+                }
                 protected abstract void Run();
 
+                private void InputRun()
+                {
+                    while (Running)
+                    {
+                        int input = InputStream.ReadByte();
+                        if (input == '\r' || input == '\n')
+                        {
+                            string temp = InputBuffer + input;
+                            InputBuffer = "";
+                            //if (StdIn.EchoStream)
+                            {
+                                UnityEngine.Debug.Log("Echoing input: " + temp);
+                                StdOut.Write(temp);
+                            }
+                            StdIn.Write(temp);
+                        }
+                        else if (input != '\0')
+                        {
+                            InputBuffer += input;
+                        }
+                        PushEvent(new InputEvent(KeyboardDown, input));
+                    }
+                }
             }
         }
     }
